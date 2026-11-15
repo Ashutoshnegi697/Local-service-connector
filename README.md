@@ -91,7 +91,7 @@ Some flows are demonstrations rather than live integrations:
 
 Do not use real passwords or payment details in the prototype.
 
-## Team
+## Contributors
 
 This project is developed by the following four team members:
 
@@ -109,7 +109,7 @@ This project is developed by the following four team members:
         <img src="https://github.com/ayushbhardwaj123b.png" width="100px" alt="Ayush Bhardwaj"/>
         <br /><sub><b>Ayush Bhardwaj</b></sub>
       </a>
-      <br />Backend Code
+      <br />Backend Development
     </td>
     <td align="center">
       <a href="https://github.com/Rakshita-wq">
