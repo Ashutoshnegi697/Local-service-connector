@@ -93,12 +93,40 @@ Do not use real passwords or payment details in the prototype.
 
 ## Team
 
-This project is developed collaboratively by:
+This project is developed by the following four team members:
 
-- **Ashutosh Negi**
-- **Devansh Bhardwaj**
-- **Divyansh Barsi(w)al**
-- **Rakshita Pant**
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/Ashutoshnegi697">
+        <img src="https://github.com/Ashutoshnegi697.png" width="100px" alt="Ashutosh Negi"/>
+        <br /><sub><b>Ashutosh Negi</b></sub>
+      </a>
+      <br />Group Lead
+    </td>
+    <td align="center">
+      <a href="https://github.com/ayushbhardwaj123b">
+        <img src="https://github.com/ayushbhardwaj123b.png" width="100px" alt="Ayush Bhardwaj"/>
+        <br /><sub><b>Ayush Bhardwaj</b></sub>
+      </a>
+      <br />Backend Code
+    </td>
+    <td align="center">
+      <a href="https://github.com/Rakshita-wq">
+        <img src="https://github.com/Rakshita-wq.png" width="100px" alt="Rakshita Pant"/>
+        <br /><sub><b>Rakshita Pant</b></sub>
+      </a>
+      <br />Provider Profile Module
+    </td>
+    <td align="center">
+      <a href="https://github.com/vansh1928">
+        <img src="https://github.com/vansh1928.png" width="100px" alt="Vansh"/>
+        <br /><sub><b>Vansh</b></sub>
+      </a>
+      <br />Team Member
+    </td>
+  </tr>
+</table>
 
 ## Future improvements
 
