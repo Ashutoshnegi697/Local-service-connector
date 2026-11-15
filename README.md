@@ -93,37 +93,30 @@ Do not use real passwords or payment details in the prototype.
 
 ## Contributors
 
-This project is developed by the following four team members:
+This project is developed by the following team members:
 
 <table>
   <tr>
     <td align="center">
       <a href="https://github.com/Ashutoshnegi697">
         <img src="https://github.com/Ashutoshnegi697.png" width="100px" alt="Ashutosh Negi"/>
-        <br /><sub><b>Ashutosh Negi</b></sub>
+        <br /><sub><b>Member 1 — Ashutosh Negi</b></sub>
       </a>
       <br />Group Lead
     </td>
     <td align="center">
       <a href="https://github.com/ayushbhardwaj123b">
         <img src="https://github.com/ayushbhardwaj123b.png" width="100px" alt="Ayush Bhardwaj"/>
-        <br /><sub><b>Ayush Bhardwaj</b></sub>
+        <br /><sub><b>Member 2 — Ayush Bhardwaj</b></sub>
       </a>
       <br />Backend Development
     </td>
     <td align="center">
       <a href="https://github.com/Rakshita-wq">
         <img src="https://github.com/Rakshita-wq.png" width="100px" alt="Rakshita Pant"/>
-        <br /><sub><b>Rakshita Pant</b></sub>
+        <br /><sub><b>Member 3 — Rakshita Pant</b></sub>
       </a>
       <br />Provider Profile Module
-    </td>
-    <td align="center">
-      <a href="https://github.com/vansh1928">
-        <img src="https://github.com/vansh1928.png" width="100px" alt="Vansh"/>
-        <br /><sub><b>Vansh</b></sub>
-      </a>
-      <br />Team Member
     </td>
   </tr>
 </table>
