@@ -1,0 +1,19 @@
+{
+  "name": "Yogya",
+  "description": "Local Service Connector",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "styles": "styles.css",
+  "scripts": [
+    "app.js"
+  ],
+  "theme": {
+    "primary": "#14614F",
+    "background": "#F2F4F0"
+  },
+  "fonts": [
+    "Bricolage Grotesque",
+    "DM Sans",
+    "Noto Sans Devanagari"
+  ]
+}
