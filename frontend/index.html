@@ -1,0 +1,962 @@
+<title>Yogya</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=DM+Sans:wght@400;500;700&family=Noto+Sans+Devanagari:wght@600&display=swap">
+<style>
+/* Layout: auth is a brand panel beside a form card; the app is a sticky top bar, a scrolling tab row and one content column. Sheets (SMS inbox, checkout) slide over the page. */
+:root{
+  --bg:#F2F4F0; --surface:#FFFFFF; --surface-2:#E8EDE6; --ink:#10211D; --muted:#566660; --line:#D3DBD1;
+  --brand:#14614F; --brand-ink:#FFFFFF; --brand-soft:#DCEBE5; --accent:#D98E04; --accent-soft:#FBEFD2;
+  --good:#1E7A46; --good-soft:#DDF0E3; --warn:#9A5B00; --warn-soft:#FBEBCF; --bad:#B3261E; --bad-soft:#F8DEDB;
+  --chip-on-brand:rgba(255,255,255,.16); --shadow:0 1px 2px rgba(16,33,29,.06),0 8px 22px rgba(16,33,29,.07);
+  --scrim:rgba(8,16,14,.55);
+  --font-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-body:'DM Sans','Segoe UI',system-ui,sans-serif;
+  --font-deva:'Noto Sans Devanagari','Nirmala UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1513; --surface:#132220; --surface-2:#1B2D2A; --ink:#E6EEEA; --muted:#93A8A0; --line:#27403B;
+    --brand:#4CC2A0; --brand-ink:#04201A; --brand-soft:#173B33; --accent:#F0B340; --accent-soft:#3A2D10;
+    --good:#58C98A; --good-soft:#163A27; --warn:#F0B340; --warn-soft:#3A2D10; --bad:#FF8A80; --bad-soft:#40201E;
+    --chip-on-brand:rgba(0,0,0,.14); --shadow:0 1px 2px rgba(0,0,0,.35); --scrim:rgba(0,0,0,.65);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1513; --surface:#132220; --surface-2:#1B2D2A; --ink:#E6EEEA; --muted:#93A8A0; --line:#27403B;
+  --brand:#4CC2A0; --brand-ink:#04201A; --brand-soft:#173B33; --accent:#F0B340; --accent-soft:#3A2D10;
+  --good:#58C98A; --good-soft:#163A27; --warn:#F0B340; --warn-soft:#3A2D10; --bad:#FF8A80; --bad-soft:#40201E;
+  --chip-on-brand:rgba(0,0,0,.14); --shadow:0 1px 2px rgba(0,0,0,.35); --scrim:rgba(0,0,0,.65);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--font-body);margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+h1,h2,h3{font-family:var(--font-display);line-height:1.15;margin:0;text-wrap:balance}
+h2{font-size:25px;font-weight:700;letter-spacing:-.01em}
+h3{font-size:17px;font-weight:700}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.wrap{max-width:1040px;margin:0 auto}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.ico{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ico.sm{width:18px;height:18px}
+
+/* brand mark */
+.mark{display:flex;align-items:baseline;gap:8px}
+.mark .deva{font-family:var(--font-deva);font-weight:600;font-size:22px;color:var(--brand)}
+.mark .latin{font-family:var(--font-display);font-weight:700;font-size:19px;letter-spacing:-.01em}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:500;text-decoration:none}
+.btn:hover{border-color:var(--brand)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:700}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.ghost{background:transparent}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:700}
+.btn.danger-text{color:var(--bad)}
+.btn.block{width:100%}
+.btn.icon{width:40px;padding:0;position:relative}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.link{background:none;border:0;padding:0;color:var(--brand);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.link[disabled]{opacity:.55;cursor:not-allowed;text-decoration:none}
+.dot{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:99px;background:var(--accent);color:#1b1300;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+
+/* forms */
+.field{display:grid;gap:6px;min-width:0}
+.field label{font-size:13px;font-weight:700}
+.field .hint{font-size:12px;color:var(--muted)}
+input,select,textarea{width:100%;min-height:42px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+textarea{min-height:84px;resize:vertical}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
+input.otp{font-family:var(--font-display);font-size:26px;letter-spacing:.45em;text-align:center;font-weight:700;min-height:54px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:14px}
+.form-error{color:var(--bad);background:var(--bad-soft);border-radius:8px;padding:8px 12px;font-size:14px}
+.stack{display:grid;gap:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;padding:3px;border-radius:12px;background:var(--surface-2);gap:2px;max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:8px 14px;border-radius:9px;cursor:pointer;font-weight:500;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:var(--shadow);font-weight:700}
+
+/* auth */
+.authbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:14px 0}
+.authbar .row{gap:8px}
+.auth{display:grid;gap:16px;padding-block:14px 8px}
+.brandpanel{position:relative;overflow:hidden;background:var(--brand);color:var(--brand-ink);border-radius:22px;padding:28px;display:grid;gap:20px;align-content:start}
+.brandpanel>*{position:relative}
+.brandpanel .rangoli{position:absolute;right:-90px;bottom:-90px;width:380px;height:380px;opacity:.17;color:var(--brand-ink)}
+.brandpanel .deva{font-family:var(--font-deva);font-weight:600;font-size:clamp(44px,9vw,68px);line-height:1}
+.brandpanel .latin{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:.02em;opacity:.85}
+.brandpanel h1{font-size:clamp(26px,4vw,36px);font-weight:700}
+.brandpanel p{opacity:.92;max-width:44ch}
+.steps{display:grid;gap:10px;margin:0;padding:0;list-style:none;counter-reset:s}
+.steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;counter-increment:s}
+.steps li::before{content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--chip-on-brand);display:grid;place-items:center;font-weight:700;font-size:13px}
+.cloud{display:flex;flex-wrap:wrap;gap:6px}
+.cloud span{background:var(--chip-on-brand);border-radius:99px;padding:3px 11px;font-size:13px}
+.cloudlabel{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;margin-bottom:6px}
+.authpanel{display:grid;gap:14px;align-content:start}
+.authcard{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:var(--shadow);display:grid;gap:16px}
+.demo{background:var(--accent-soft);border-radius:12px;padding:12px 14px;display:grid;gap:8px;font-size:14px}
+@media (min-width:880px){.auth{grid-template-columns:5fr 6fr;gap:24px;padding-block:20px 28px}.brandpanel{padding:40px}}
+
+/* shell */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:10px;padding-block:12px;border-bottom:1px solid var(--line)}
+.topbar .who{margin-left:auto;display:flex;align-items:center;gap:10px;min-width:0}
+.topbar .who div{min-width:0;line-height:1.25}
+.topbar .who strong,.topbar .who small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:24ch}
+@media (max-width:640px){.topbar .who div,.topbar .avatar{display:none}}
+.avatar{width:38px;height:38px;flex:none;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-family:var(--font-display);font-weight:700}
+.avatar.lg{width:46px;height:46px;font-size:18px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-block:14px;scrollbar-width:thin}
+.tabs button{flex:none;display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;background:transparent;border-radius:99px;padding:8px 15px;cursor:pointer;font-weight:500;color:var(--muted)}
+.tabs button:hover{color:var(--ink);background:var(--surface-2)}
+.tabs button[aria-selected="true"]{background:var(--brand);color:var(--brand-ink);font-weight:700}
+.badge{min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--accent);color:#1b1300;font-size:12px;font-weight:700;display:inline-grid;place-items:center}
+.content{display:grid;gap:20px;padding-block:6px 0}
+.head{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:end;justify-content:space-between}
+.head p{color:var(--muted);max-width:60ch}
+.hello{position:relative;overflow:hidden;background:var(--brand-soft);border-radius:22px;padding:22px 24px;display:grid;gap:6px}
+.hello>*{position:relative}
+.hello .rangoli{position:absolute;right:-60px;top:-70px;width:260px;height:260px;color:var(--brand);opacity:.16}
+.hello h2{font-size:28px}
+.hello p{color:var(--muted)}
+
+/* surfaces */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;min-width:0}
+.card.next{border-color:var(--brand);box-shadow:var(--shadow)}
+.list{display:grid;gap:12px}
+.cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}
+.item{display:grid;gap:12px}
+.item .top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.item .who{display:flex;align-items:center;gap:12px;min-width:0}
+.item .who div{min-width:0}
+.item .who strong{display:block;overflow-wrap:anywhere}
+.svc{display:flex;align-items:center;gap:10px;min-width:0}
+.svc .bub{width:38px;height:38px;border-radius:12px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;flex:none}
+.meta{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--muted);font-size:14px}
+.meta b{color:var(--ink);font-weight:500}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.confirm{display:inline-flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:2px}
+.stat b{font-family:var(--font-display);font-size:27px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:13px}
+.empty{border:1.5px dashed var(--line);border-radius:16px;padding:28px 20px;text-align:center;display:grid;gap:8px;justify-items:center;color:var(--muted)}
+.empty strong{color:var(--ink);font-family:var(--font-display);font-size:17px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.pick{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:7px 14px;cursor:pointer;font-weight:500}
+.pick:hover{border-color:var(--brand)}
+.pick[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:700}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+.tile{display:grid;justify-items:center;gap:8px;padding:14px 8px;border-radius:16px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:500;text-align:center;font-size:14px}
+.tile .ico{width:26px;height:26px;color:var(--brand)}
+.tile:hover{border-color:var(--brand)}
+.tile[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:700}
+.tile[aria-pressed="true"] .ico{color:var(--brand-ink)}
+.tag{display:inline-flex;align-items:center;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700;letter-spacing:.02em;background:var(--surface-2);color:var(--muted)}
+.tag.WAITING,.tag.PENDING{background:var(--warn-soft);color:var(--warn)}
+.tag.ACCEPTED{background:var(--brand-soft);color:var(--brand)}
+.tag.COMPLETED{background:var(--good-soft);color:var(--good)}
+.tag.CANCELLED,.tag.REJECTED,.tag.DECLINED{background:var(--bad-soft);color:var(--bad)}
+.stars{color:var(--accent);letter-spacing:1px}
+.track{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.track i{width:10px;height:10px;border-radius:50%;background:var(--line);display:inline-block}
+.track i.on{background:var(--brand)}
+.track s{width:22px;height:2px;background:var(--line);text-decoration:none;display:inline-block}
+.track s.on{background:var(--brand)}
+.track em{font-style:normal}
+.track em.on{color:var(--ink);font-weight:700}
+.codebox{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;background:var(--accent-soft);border-radius:12px;padding:10px 14px}
+.codebox b{font-family:var(--font-display);font-size:26px;letter-spacing:.2em;line-height:1}
+.codebox span{font-size:13px;font-weight:700}
+.codebox small{flex-basis:100%;color:var(--muted)}
+.starpick{display:flex;gap:4px}
+.starpick button{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:22px;line-height:1;color:var(--line);cursor:pointer}
+.starpick button.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.svcsum{display:flex;flex-wrap:wrap;gap:8px}
+.svcsum span{background:var(--good-soft);color:var(--good);border-radius:99px;padding:5px 12px;font-weight:700;font-size:14px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.sub{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
+.price{font-family:var(--font-display);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
+.inline{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+.inline .field{flex:1 1 160px}
+
+/* toasts and SMS banners */
+#toasts{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 8px);padding:0 16px;display:grid;gap:8px;justify-items:center;pointer-events:none;z-index:40}
+.toast{pointer-events:auto;background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:12px;max-width:min(92vw,460px);box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:14px}
+.toast.bad{background:var(--bad);color:#fff}
+.smsbanner{pointer-events:auto;width:min(92vw,440px);text-align:left;display:grid;gap:2px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.25);cursor:pointer}
+.smsbanner b{font-size:12px;letter-spacing:.06em;color:var(--brand);display:flex;justify-content:space-between}
+.smsbanner span{font-size:14px}
+
+/* sheets */
+.overlay{position:fixed;inset:0;z-index:30;background:var(--scrim);display:grid;place-items:center;padding:16px max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet{background:var(--surface);color:var(--ink);width:min(100%,470px);max-height:calc(100% - 8px);overflow:auto;border-radius:22px;padding:22px;display:grid;gap:16px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.sheet:focus{outline:none}
+@media (max-width:560px){.overlay{place-items:end center;padding-bottom:0}.sheet{border-radius:22px 22px 0 0;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}}
+.sheethead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sms{background:var(--surface-2);border-radius:16px 16px 16px 4px;padding:10px 14px;display:grid;gap:4px}
+.sms.new{background:var(--brand-soft)}
+.sms .sm{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted)}
+.sms .sm b{color:var(--brand);letter-spacing:.05em}
+.sms p{font-size:14px;overflow-wrap:anywhere}
+.payhead{display:flex;align-items:center;justify-content:space-between}
+.amount{font-family:var(--font-display);font-size:38px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.spin{width:38px;height:38px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--brand);margin:6px auto}
+@media (prefers-reduced-motion:no-preference){
+  .spin{animation:sp .8s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+  .toast,.smsbanner{animation:dn .22s ease-out}@keyframes dn{from{transform:translateY(-10px);opacity:0}}
+  .sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(16px);opacity:0}}
+  .card,.tile,.btn{transition:border-color .15s,box-shadow .15s,transform .15s}
+  .cols>.card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+}
+.okmark{width:56px;height:56px;border-radius:50%;background:var(--good-soft);color:var(--good);display:grid;place-items:center;margin:0 auto}
+.okmark.bad{background:var(--bad-soft);color:var(--bad)}
+.okmark .ico{width:30px;height:30px;stroke-width:2.4}
+.center{text-align:center;display:grid;gap:8px;justify-items:center}
+</style>
+
+<div id="app"></div>
+<div id="toasts" role="status" aria-live="polite"></div>
+<div id="modal"></div>
+
+<script>
+(function(){
+'use strict';
+const SERVICES=['Plumber','Carpenter','Electrician','Geyser Repair','AC Repair','Painter','Cleaner','Appliance Repair','Vegetable Vendor'];
+const AREAS=['Rishikesh','Raipur','Dehradun','Clement Town','Prem Nagar'];
+const CATS=['Coding & Tech','Dance','Music','Art & Craft','Languages','Sports & Fitness','Academics','Cooking','Business & Finance','Other'];
+const LEVELS=['Beginners','Intermediate','Advanced','All levels'];
+const FEES={'Plumber':350,'Carpenter':400,'Electrician':300,'Geyser Repair':450,'AC Repair':600,'Painter':500,'Cleaner':450,'Appliance Repair':400,'Vegetable Vendor':40};
+const MAXQ=5, KEY='yogya-state-v2';
+const IC={
+  'Plumber':'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7V21h3.3l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+  'Carpenter':'<path d="M3 17l14-10 4 4-14 10zM8 14l2 2M11 12l2 2M14 10l2 2"/>',
+  'Electrician':'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  'Geyser Repair':'<path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-6 1-9z"/>',
+  'AC Repair':'<path d="M12 2v20M4.2 7l15.6 10M19.8 7L4.2 17M9 3l3 2 3-2M9 21l3-2 3 2"/>',
+  'Painter':'<path d="M18 3l3 3-9 9-3-3zM9 12l-3 1c-2 1-1 5-4 6 4 1 8 0 8-4z"/>',
+  'Cleaner':'<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>',
+  'Appliance Repair':'<path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5"/>',
+  'Vegetable Vendor':'<path d="M5 19C5 9 11 4 20 4c0 9-5 15-15 15zM5 19l8-8"/>',
+  'bell':'<path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7zM10 20a2 2 0 0 0 4 0"/>',
+  'chat':'<path d="M4 5h16v11H9l-5 4z"/>',
+  'moon':'<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
+  'check':'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  'x':'<path d="M6 6l12 12M18 6L6 18"/>'
+};
+function icon(n,c){return `<svg class="ico ${c||''}" viewBox="0 0 24 24" aria-hidden="true">${IC[n]||IC['Plumber']}</svg>`}
+function rangoli(){let s='';for(let i=0;i<12;i++)s+=`<ellipse cx="160" cy="80" rx="22" ry="62" transform="rotate(${i*30} 160 160)"/>`;for(let r=20;r<=150;r+=26)s+=`<circle cx="160" cy="160" r="${r}"/>`;return `<svg class="rangoli" viewBox="0 0 320 320" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4">${s}</svg>`}
+
+/* ---------- data ---------- */
+function seed(){
+  const now=Date.now(),h=3600000;
+  const P=(id,name,service,area,rt,rc,wc)=>({id,name,phone:'90000'+String(id).padStart(5,'0'),email:name.split(' ')[0].toLowerCase()+'@yogya.demo',password:'demo123',service,area,fee:FEES[service],friend:'demo',mail:'demo',ratingTotal:rt,ratingCount:rc,workCount:wc});
+  return {
+    users:[
+      {id:1,name:'Aarav Sharma',phone:'9000000001',email:'aarav@yogya.demo',password:'demo123',area:'Dehradun',friend:'rohan',mail:'gmail'},
+      {id:2,name:'Meera Joshi',phone:'9000000002',email:'meera@yogya.demo',password:'demo123',area:'Rishikesh',friend:'anita',mail:'gmail'}
+    ],
+    providers:[
+      P(100,'Ramesh Kumar','Plumber','Dehradun',55,12,14),P(101,'Sunita Devi','Cleaner','Dehradun',72,16,31),
+      P(102,'Imran Ansari','Electrician','Dehradun',44,10,12),P(103,'Mohan Rawat','Plumber','Dehradun',31,8,9),
+      P(104,'Vikas Thakur','AC Repair','Rishikesh',47,10,18),P(105,'Pooja Negi','Painter','Clement Town',60,13,22),
+      P(106,'Suresh Bhatt','Vegetable Vendor','Prem Nagar',38,9,40),P(107,'Anil Joshi','Carpenter','Raipur',50,11,16),
+      P(108,'Farhan Qureshi','Geyser Repair','Dehradun',0,0,0),P(109,'Kavita Rana','Appliance Repair','Rishikesh',27,6,7)
+    ],
+    bookings:[
+      {no:1000,userId:1,providerId:101,service:'Cleaner',area:'Dehradun',status:'COMPLETED',created:now-52*h,seq:1,rating:null,doneAt:now-30*h,amount:450,code:'7305',pay:{status:'PAID',method:'UPI',ref:'YGP41920688',ts:now-29*h}},
+      {no:1001,userId:1,providerId:102,service:'Electrician',area:'Dehradun',status:'ACCEPTED',created:now-20*h,seq:2,rating:null,amount:300,code:'4821',pay:null},
+      {no:1002,userId:1,providerId:100,service:'Plumber',area:'Dehradun',status:'WAITING',created:now-3*h,seq:3,rating:null,amount:350,code:null,pay:null}
+    ],
+    trainers:[
+      {id:1,ownerRole:'user',ownerId:1,skill:'Python programming',category:'Coding & Tech',level:'Beginners',mode:'Online',area:'Anywhere (online)',fee:300,bio:'Software student. I teach loops, functions and small projects with live screen sharing.',created:now-90*h},
+      {id:2,ownerRole:'user',ownerId:2,skill:'Kathak dance',category:'Dance',level:'All levels',mode:'In person',area:'Rishikesh',fee:500,bio:'Eight years of stage practice. Basic footwork, tatkar and one short piece per month.',created:now-80*h},
+      {id:3,ownerRole:'provider',ownerId:105,skill:'Madhubani wall painting',category:'Art & Craft',level:'Beginners',mode:'In person',area:'Clement Town',fee:400,bio:'I paint homes for a living and teach the folk patterns I use on walls and canvas.',created:now-70*h},
+      {id:4,ownerRole:'provider',ownerId:107,skill:'Woodworking basics',category:'Art & Craft',level:'Beginners',mode:'In person',area:'Raipur',fee:350,bio:'Measuring, joinery and finishing. Make a small shelf in two sessions.',created:now-60*h}
+    ],
+    sessions:[{id:5000,listingId:1,skill:'Python programming',trainerRole:'user',trainerId:1,learnerRole:'user',learnerId:2,message:'I know basic HTML and want to start Python for data work. Free on weekends.',status:'PENDING',created:now-5*h,amount:300,pay:null}],
+    sms:[
+      {id:3,to:'9000000001',text:'Booking #1002 for Plumber was sent to Ramesh Kumar. You will get an SMS when it is accepted.',ts:now-3*h,read:true},
+      {id:2,to:'9000000001',text:'Booking #1001 accepted by Imran Ansari. Your job code is 4821. Share it only when the work is finished.',ts:now-19*h,read:true},
+      {id:1,to:'9000000001',text:'Payment of ₹450 received for Cleaner booking #1000. Ref YGP41920688. Thank you!',ts:now-29*h,read:true},
+      {id:4,to:'9000000100',text:'New booking request #1002 from Aarav Sharma (Plumber, Dehradun). Open Yogya to accept or reject.',ts:now-3*h,read:true}
+    ],
+    nextUser:3,nextProv:110,nextBooking:1003,nextTrainer:5,nextSession:5001,nextSms:5,seq:3,session:null
+  };
+}
+let DB=null;
+try{const raw=localStorage.getItem(KEY);DB=raw?JSON.parse(raw):null}catch(e){DB=null}
+if(!DB||!DB.users||!DB.sms)DB=seed();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}}
+
+/* ---------- helpers ---------- */
+const $=(s,r)=>(r||document).querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const inr=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+const sum=a=>a.reduce((x,y)=>x+y,0);
+const me=()=>{const s=DB.session;return s?(s.role==='user'?DB.users:DB.providers).find(a=>a.id===s.id)||null:null};
+const role=()=>DB.session&&DB.session.role;
+const acct=(r,id)=>(r==='user'?DB.users:DB.providers).find(a=>a.id===id);
+const avg=p=>p.ratingCount?p.ratingTotal/p.ratingCount:0;
+const stars=v=>{const r=Math.round(v);return '★★★★★'.slice(0,r)+'☆☆☆☆☆'.slice(0,5-r)};
+const ratingHTML=p=>p.ratingCount?`<span class="stars" aria-hidden="true">${stars(avg(p))}</span> <strong>${avg(p).toFixed(1)}</strong> <span class="muted">(${p.ratingCount})</span>`:'<span class="muted">New, no ratings yet</span>';
+const when=ts=>new Date(ts).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+const opts=(list,sel,ph)=>(ph?`<option value="">${esc(ph)}</option>`:'')+list.map(x=>`<option${x===sel?' selected':''}>${esc(x)}</option>`).join('');
+const avatar=(n,c)=>`<span class="avatar ${c||''}" aria-hidden="true">${esc((n||'?').trim().charAt(0).toUpperCase())}</span>`;
+const empty=(t,h,btn)=>`<div class="empty"><strong>${esc(t)}</strong><span>${esc(h)}</span>${btn||''}</div>`;
+const paidAmt=x=>x.pay&&x.pay.status==='PAID'?x.amount:0;
+const waitingOf=pid=>DB.bookings.filter(b=>b.providerId===pid&&b.status==='WAITING').sort((a,b)=>a.seq-b.seq);
+const acceptedOf=pid=>DB.bookings.filter(b=>b.providerId===pid&&b.status==='ACCEPTED').sort((a,b)=>a.seq-b.seq);
+const activeOf=uid=>DB.bookings.filter(b=>b.userId===uid&&(b.status==='WAITING'||b.status==='ACCEPTED')).sort((a,b)=>b.created-a.created);
+const getItem=(k,id)=>k==='booking'?DB.bookings.find(b=>b.no===id):DB.sessions.find(s=>s.id===id);
+function parties(k,x){
+  if(k==='booking')return {payer:acct('user',x.userId),payee:acct('provider',x.providerId),label:x.service+' booking #'+x.no};
+  return {payer:acct(x.learnerRole,x.learnerId),payee:acct(x.trainerRole,x.trainerId),label:x.skill+' session'};
+}
+const first=n=>String(n||'').split(' ')[0];
+function toast(msg,bad,ms){const d=document.createElement('div');d.className='toast'+(bad?' bad':'');d.textContent=msg;$('#toasts').appendChild(d);setTimeout(()=>d.remove(),ms||3200)}
+function formErr(form,msg){const p=form.querySelector('.form-error');if(p){p.textContent=msg||'';p.hidden=!msg}}
+function commit(){save();render()}
+function mineSms(){const a=me();return a?DB.sms.filter(m=>m.to===a.phone):DB.sms}
+function unread(){return mineSms().filter(m=>!m.read).length}
+
+/* ---------- SMS (demo inbox: no real message leaves this page) ---------- */
+function sms(to,text){
+  const m={id:DB.nextSms++,to,text,ts:Date.now(),read:false};
+  DB.sms.unshift(m);DB.sms=DB.sms.slice(0,80);save();
+  const a=me();
+  if(!a||a.phone===to){
+    const b=document.createElement('button');b.className='smsbanner';b.dataset.act='sms';
+    b.innerHTML=`<b><span>YOGYA · SMS</span><span>now</span></b><span>${esc(text)}</span>`;
+    $('#toasts').appendChild(b);setTimeout(()=>b.remove(),7500);
+  }
+}
+
+/* ---------- OTP (6 digits, 5 minutes, 3 tries, resend after 30 seconds) ---------- */
+let otp=null;
+function newOtp(phone){
+  const code=String(Math.floor(100000+Math.random()*900000));
+  otp={phone,code,exp:Date.now()+300000,tries:0,sentAt:Date.now()};
+  sms(phone,code+' is your Yogya verification code. It is valid for 5 minutes. Never share it with anyone.');
+}
+function checkOtp(v){
+  if(!otp)return 'Request a new code first.';
+  if(Date.now()>otp.exp)return 'This code has expired. Request a new one.';
+  if(otp.tries>=3)return 'Too many wrong attempts. Request a new code.';
+  if(String(v).trim()!==otp.code){otp.tries++;const left=3-otp.tries;return left>0?'That code is not correct. '+left+' attempt'+(left>1?'s':'')+' left.':'Too many wrong attempts. Request a new code.'}
+  return '';
+}
+
+const ui={authMode:'signin',authRole:'user',method:'password',fmethod:'otp',step:'form',ctx:null,tab:'home',book:{service:'Plumber',area:'Dehradun',sort:'current'},confirm:null,rate:{},trainTab:'find',filter:{q:'',cat:'',mode:''},reqOpen:null,modal:null,smsAll:false,modalKey:''};
+
+/* ---------- auth views ---------- */
+function authCard(){
+  const isP=ui.authRole==='provider',r=ui.authRole;
+  const seg=`<div class="seg" role="group" aria-label="Account type"><button type="button" data-act="authrole" data-role="user" aria-pressed="${!isP}">Customer</button><button type="button" data-act="authrole" data-role="provider" aria-pressed="${isP}">Service provider</button></div>`;
+  if(ui.step==='otp'){
+    const c=ui.ctx,masked='••••••'+c.phone.slice(-4);
+    const title=c.purpose==='signup'?'Verify your phone':c.purpose==='reset'?'Reset your password':'Enter your code';
+    const btn=c.purpose==='signup'?'Verify and create account':c.purpose==='reset'?'Verify and set password':'Verify and sign in';
+    return `<div><h2>${title}</h2><p class="muted">We sent a 6-digit code by SMS to ${masked}.</p></div>
+    <form data-form="verify" novalidate class="stack">
+      <div class="field"><label for="ot-code">Verification code</label><input id="ot-code" name="code" class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······"></div>
+      ${c.purpose==='reset'?'<div class="field"><label for="ot-pass">New password</label><input id="ot-pass" name="password" type="password" autocomplete="new-password"><span class="hint">At least 6 characters.</span></div>':''}
+      <p class="form-error" role="alert" hidden></p>
+      <button class="btn primary block">${btn}</button>
+      <div class="row" style="justify-content:space-between"><button type="button" class="link" id="resend-btn" data-act="resend" disabled>Resend code</button><button type="button" class="link" data-act="otpback">Go back</button></div>
+    </form>
+    <div class="demo"><strong>Demo mode</strong><span>No real SMS leaves this page. The code arrives in the SMS inbox, like a message on your phone.</span><div><button type="button" class="btn" data-act="sms">${icon('chat','sm')} Open SMS inbox</button></div></div>`;
+  }
+  if(ui.authMode==='signin'){
+    const pw=ui.method==='password';
+    return `<div><h2>Sign in</h2><p class="muted">Welcome back to Yogya.</p></div>${seg}
+    <div class="seg" role="group" aria-label="Sign in method"><button type="button" data-act="method" data-v="password" aria-pressed="${pw}">Password</button><button type="button" data-act="method" data-v="otp" aria-pressed="${!pw}">SMS code</button></div>
+    <form data-form="${pw?'signin':'signinotp'}" novalidate class="stack">
+      <div class="field"><label for="si-ident">${isP?'Provider':'User'} ID, phone or email</label><input id="si-ident" name="ident" autocomplete="username" required></div>
+      ${pw?'<div class="field"><label for="si-pass">Password</label><input id="si-pass" name="password" type="password" autocomplete="current-password" required></div>':''}
+      <p class="form-error" role="alert" hidden></p>
+      <button class="btn primary block">${pw?'Sign in':'Send code by SMS'}</button>
+      <div class="row" style="justify-content:space-between"><button type="button" class="link" data-act="forgot">Forgot password?</button><button type="button" class="link" data-act="authmode" data-mode="signup">Create an account</button></div>
+    </form>
+    <div class="demo"><strong>Sample accounts</strong><span>Password for all samples: <b>demo123</b>. SMS codes show up in the inbox.</span><div class="row"><button type="button" class="btn" data-act="demo" data-role="user">Customer ID 1</button><button type="button" class="btn" data-act="demo" data-role="provider">Provider ID 100</button></div></div>`;
+  }
+  if(ui.authMode==='forgot'){
+    const o=ui.fmethod==='otp';
+    return `<div><h2>Reset password</h2><p class="muted">Pick how you want to prove it is you.</p></div>${seg}
+    <div class="seg" role="group" aria-label="Reset method"><button type="button" data-act="fmethod" data-v="otp" aria-pressed="${o}">SMS code</button><button type="button" data-act="fmethod" data-v="answers" aria-pressed="${!o}">Security answers</button></div>
+    <form data-form="${o?'resetotp':'recover'}" novalidate class="stack">
+      <div class="field"><label for="rc-ident">${isP?'Provider':'User'} ID, phone or email</label><input id="rc-ident" name="ident" required></div>
+      ${o?'':`<div class="field"><label for="rc-friend">Best friend's name</label><input id="rc-friend" name="friend"></div>
+      <div class="field"><label for="rc-mail">Personal email answer</label><input id="rc-mail" name="mail"></div>
+      <div class="field"><label for="rc-pass">New password</label><input id="rc-pass" name="password" type="password" autocomplete="new-password"><span class="hint">At least 6 characters.</span></div>`}
+      <p class="form-error" role="alert" hidden></p>
+      <button class="btn primary block">${o?'Send code by SMS':'Set new password'}</button>
+      <button type="button" class="link" data-act="authmode" data-mode="signin" style="justify-self:start">Back to sign in</button>
+    </form>`;
+  }
+  return `<div><h2>Create your account</h2><p class="muted">${isP?'List your service and start receiving requests.':'Book local professionals and learn from skilled neighbours.'} We will verify your phone with an SMS code.</p></div>${seg}
+    <form data-form="signup" novalidate class="stack"><div class="grid2">
+      <div class="field"><label for="su-name">Full name</label><input id="su-name" name="name" autocomplete="name" required></div>
+      <div class="field"><label for="su-phone">Mobile number</label><input id="su-phone" name="phone" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="10 digits" required></div>
+      <div class="field"><label for="su-email">Email</label><input id="su-email" name="email" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="su-pass">Password</label><input id="su-pass" name="password" type="password" autocomplete="new-password" required><span class="hint">At least 6 characters.</span></div>
+      <div class="field"><label for="su-area">Area</label><select id="su-area" name="area">${opts(AREAS,'')}</select></div>
+      ${isP?`<div class="field"><label for="su-service">Service you offer</label><select id="su-service" name="service">${opts(SERVICES,'')}</select></div>
+      <div class="field"><label for="su-fee">Starting charge (₹)</label><input id="su-fee" name="fee" type="number" min="0" max="100000" inputmode="numeric" value="350"><span class="hint">Shown to customers before they book.</span></div>`:''}
+      <div class="field"><label for="su-friend">Best friend's name</label><input id="su-friend" name="friend" required><span class="hint">Security answer 1</span></div>
+      <div class="field"><label for="su-mail">Personal email answer</label><input id="su-mail" name="mail" required><span class="hint">Security answer 2</span></div>
+    </div><p class="form-error" role="alert" hidden></p>
+    <button class="btn primary block">Send verification code</button>
+    <button type="button" class="link" data-act="authmode" data-mode="signin" style="justify-self:start">I already have an account</button></form>`;
+}
+function topBtns(){
+  const n=unread();
+  return `<button class="btn icon ghost" data-act="theme" aria-label="Switch light or dark theme">${icon('moon')}</button><button class="btn icon" data-act="sms" aria-label="SMS inbox${n?', '+n+' unread':''}">${icon('chat')}${n?`<span class="dot">${n}</span>`:''}</button>`;
+}
+function viewAuth(){
+  return `<div class="wrap"><div class="authbar"><div class="mark"><span class="deva" lang="hi">योग्य</span><span class="latin">Yogya</span></div><div class="row">${topBtns()}</div></div>
+  <div class="auth"><aside class="brandpanel">${rangoli()}<div><div class="deva" lang="hi">योग्य</div><div class="latin">YOGYA</div></div>
+  <h1>Skilled people, close to home.</h1><p>Book a plumber, electrician or cleaner in your area. Or teach what you know, from Python to Kathak, to someone nearby.</p>
+  <ol class="steps"><li><span>Pick a service and a provider in your area.</span></li><li><span>The provider accepts and you get an SMS with a job code.</span></li><li><span>Share the code when the work is done, then pay and rate.</span></li></ol>
+  <div><div class="cloudlabel">Services</div><div class="cloud">${SERVICES.map(s=>`<span>${esc(s)}</span>`).join('')}</div></div></aside>
+  <main class="authpanel"><div class="authcard">${authCard()}</div></main></div></div>`;
+}
+
+/* ---------- shell ---------- */
+function tabsFor(){
+  const a=me();
+  if(role()==='user'){
+    const act=activeOf(a.id).length,un=DB.bookings.filter(b=>b.userId===a.id&&b.status==='COMPLETED'&&!b.rating).length;
+    return [['home','Home'],['book','Book a service'],['active','Active',act],['done','Completed'],['rate','Rate',un],['train','Trainers'],['profile','Profile']];
+  }
+  return [['home','Home'],['req','Requests',waitingOf(a.id).length],['acc','Accepted',acceptedOf(a.id).length],['pdone','Completed'],['train','Trainers'],['profile','Profile']];
+}
+function viewShell(){
+  const a=me(),tabs=tabsFor();
+  if(!tabs.some(t=>t[0]===ui.tab))ui.tab=tabs[0][0];
+  const views={home:role()==='user'?viewHomeUser:viewHomeProv,book:viewBook,active:viewActive,done:viewDone,rate:viewRate,req:viewRequests,acc:viewAccepted,pdone:viewProvDone,train:viewTrain,profile:viewProfile};
+  return `<div class="wrap"><header class="topbar"><div class="mark"><span class="deva" lang="hi">योग्य</span><span class="latin">Yogya</span></div>
+  <div class="who">${topBtns()}${avatar(a.name)}<div><strong>${esc(a.name)}</strong><small class="muted">${role()==='user'?'Customer':esc(a.service)} · ID ${a.id}</small></div><button class="btn ghost signout" data-act="signout">Sign out</button></div></header>
+  <nav class="tabs" role="tablist" aria-label="Sections">${tabs.map(t=>`<button role="tab" data-act="tab" data-tab="${t[0]}" aria-selected="${ui.tab===t[0]}">${esc(t[1])}${t[2]?`<span class="badge">${t[2]}</span>`:''}</button>`).join('')}</nav>
+  <main class="content" role="tabpanel">${views[ui.tab]()}</main></div>`;
+}
+
+/* ---------- shared pieces ---------- */
+function greeting(){const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening'}
+function payChip(x){
+  if(x.pay&&x.pay.status==='PAID')return `<span class="tag COMPLETED">Paid ${inr(x.amount)} · ${esc(x.pay.method)}</span>`;
+  if(x.pay&&x.pay.status==='CASH')return `<span class="tag WAITING">Cash on service · ${inr(x.amount)}</span>`;
+  return `<span class="tag">Unpaid · ${inr(x.amount)}</span>`;
+}
+const payBtn=(k,id,x,primary)=>x.pay&&x.pay.status==='PAID'?'':`<button class="btn ${primary?'primary':''}" data-act="pay" data-kind="${k}" data-id="${id}">Pay ${inr(x.amount)}</button>`;
+function tracker(b){
+  const steps=['Waiting','Accepted','Completed'],i={WAITING:0,ACCEPTED:1,COMPLETED:2}[b.status];
+  return `<div class="track" aria-label="Progress: ${steps[i]}">${steps.map((s,n)=>`${n?`<s class="${n<=i?'on':''}"></s>`:''}<i class="${n<=i?'on':''}"></i><em class="${n===i?'on':''}">${s}</em>`).join('')}</div>`;
+}
+function confirmBtn(key,askLabel,yesLabel,act,attrs){
+  if(ui.confirm===key)return `<span class="confirm"><span>Are you sure?</span><button class="btn danger" data-act="${act}" ${attrs}>${yesLabel}</button><button class="btn ghost" data-act="noask">Keep it</button></span>`;
+  return `<button class="btn ghost danger-text" data-act="ask" data-key="${key}">${askLabel}</button>`;
+}
+function bookingCard(b,extra){
+  const p=acct('provider',b.providerId);
+  return `<article class="card item"><div class="top"><div class="svc"><span class="bub">${icon(b.service)}</span><div><strong>${esc(b.service)}</strong> <span class="muted small">#${b.no}</span></div></div><span class="tag ${b.status}">${b.status}</span></div>
+  <div class="meta"><span>Provider <b>${esc(p?p.name:'Unknown')}</b></span><span>Area <b>${esc(b.area)}</b></span><span>Booked <b>${when(b.created)}</b></span>${b.status==='ACCEPTED'&&p?`<span>Call <b>${esc(p.phone)}</b></span>`:''}</div>${extra||''}</article>`;
+}
+const codeBox=b=>`<div class="codebox"><span>Job code</span><b>${esc(b.code)}</b><small>Give this code to the provider only when the work is finished. They need it to close the job.</small></div>`;
+const provStats=p=>{
+  const earn=sum(DB.bookings.filter(b=>b.providerId===p.id).map(paidAmt))+sum(DB.sessions.filter(s=>s.trainerRole==='provider'&&s.trainerId===p.id).map(paidAmt));
+  return `<div class="stats"><div class="stat"><b>${inr(earn)}</b><span>Earned so far</span></div><div class="stat"><b>${p.ratingCount?avg(p).toFixed(1):'–'}</b><span>Rating${p.ratingCount?' ('+p.ratingCount+')':''}</span></div><div class="stat"><b>${p.workCount}</b><span>Jobs completed</span></div><div class="stat"><b>${waitingOf(p.id).length} / ${MAXQ}</b><span>Waiting requests</span></div></div>`;
+};
+function custMeta(b,full){
+  const c=acct('user',b.userId);if(!c)return '';
+  return `<div class="meta"><span>Customer <b>${esc(c.name)}</b></span><span>Phone <b>${esc(c.phone)}</b></span>${full?`<span>Email <b>${esc(c.email)}</b></span>`:''}<span>Area <b>${esc(b.area)}</b></span><span>Requested <b>${when(b.created)}</b></span><span>Charge <b>${inr(b.amount)}</b></span></div>`;
+}
+
+/* ---------- home ---------- */
+function viewHomeUser(){
+  const u=me(),act=activeOf(u.id),done=DB.bookings.filter(b=>b.userId===u.id&&b.status==='COMPLETED');
+  const un=done.filter(b=>!b.rating).length;
+  const due=sum(done.filter(b=>!(b.pay&&b.pay.status==='PAID')).map(b=>b.amount));
+  const next=act.find(b=>b.status==='ACCEPTED')||act[0];
+  const earned=sum(DB.sessions.filter(s=>s.trainerRole==='user'&&s.trainerId===u.id).map(paidAmt));
+  return `<section class="hello">${rangoli()}<h2>${greeting()}, ${esc(first(u.name))}</h2><p>${act.length?`You have ${act.length} active booking${act.length>1?'s':''}.`:'No active bookings right now.'} ${u.area} is your area.</p></section>
+  <div class="stats"><div class="stat"><b>${act.length} / ${MAXQ}</b><span>Active bookings</span></div><div class="stat"><b>${done.length}</b><span>Services completed</span></div><div class="stat"><b>${un}</b><span>Waiting for your rating</span></div><div class="stat"><b>${inr(due)}</b><span>Payment due</span></div>${earned?`<div class="stat"><b>${inr(earned)}</b><span>Earned by teaching</span></div>`:''}</div>
+  ${next?`<div class="stack" style="gap:10px"><h3>Next up</h3>${bookingCard(next,tracker(next)+(next.status==='ACCEPTED'&&next.code?codeBox(next):'')+`<div class="actions">${payChip(next)}${next.status==='ACCEPTED'?payBtn('booking',next.no,next,true):''}<button class="btn ghost" data-act="tab" data-tab="active">All active bookings</button></div>`)}</div>`:''}
+  <div class="stack" style="gap:10px"><h3>Book in one tap</h3><div class="tiles">${SERVICES.map(s=>`<button class="tile" data-act="quick" data-v="${esc(s)}">${icon(s)}<span>${esc(s)}</span></button>`).join('')}</div></div>`;
+}
+function viewHomeProv(){
+  const p=me(),q=waitingOf(p.id),ac=acceptedOf(p.id);
+  return `<section class="hello">${rangoli()}<h2>${greeting()}, ${esc(first(p.name))}</h2><p>${q.length?`${q.length} request${q.length>1?'s are':' is'} waiting for you.`:'No requests waiting right now.'} You work as ${esc(p.service)} in ${esc(p.area)}.</p></section>
+  ${provStats(p)}
+  <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))">
+  <section class="card item"><h3>Next request</h3>${q.length?`<div class="svc"><span class="bub">${icon(q[0].service)}</span><strong>${esc(q[0].service)} <span class="muted small">#${q[0].no}</span></strong></div>${custMeta(q[0],false)}<div><button class="btn primary" data-act="tab" data-tab="req">Review requests</button></div>`:'<p class="muted">Nothing in the queue.</p>'}</section>
+  <section class="card item"><h3>Accepted jobs</h3>${ac.length?ac.slice(0,3).map(b=>`<div class="top"><span><strong>${esc(b.service)}</strong> <span class="muted small">#${b.no} · ${esc((acct('user',b.userId)||{}).name||'')}</span></span>${payChip(b)}</div>`).join('')+`<div><button class="btn" data-act="tab" data-tab="acc">Open accepted jobs</button></div>`:'<p class="muted">No accepted jobs yet.</p>'}</section></div>`;
+}
+
+/* ---------- customer views ---------- */
+function provCard(p){
+  const u=me(),q=waitingOf(p.id).length,full=q>=MAXQ,capped=activeOf(u.id).length>=MAXQ;
+  return `<article class="card item"><div class="who">${avatar(p.name,'lg')}<div><strong>${esc(p.name)}</strong><span class="muted small">ID ${p.id} · ${esc(p.area)}</span></div></div>
+  <div>${ratingHTML(p)}</div><div class="meta"><span><b>${p.workCount}</b> jobs done</span><span><b>${q}</b> of ${MAXQ} request slots used</span></div>
+  <div class="top"><span class="price">${inr(p.fee)}<span class="muted small" style="font-weight:400"> starting</span></span><button class="btn primary" data-act="book" data-id="${p.id}"${(full||capped)?' disabled':''}>${full?'Queue full':'Book '+esc(first(p.name))}</button></div></article>`;
+}
+function viewBook(){
+  const u=me(),b=ui.book,act=activeOf(u.id).length;let res='';
+  if(b.service&&b.area){
+    let list=DB.providers.filter(p=>p.service===b.service&&p.area===b.area);
+    if(b.sort==='rating')list=list.slice().sort((x,y)=>avg(y)-avg(x));else if(b.sort==='work')list=list.slice().sort((x,y)=>y.workCount-x.workCount);
+    res=list.length?`<div class="cols">${list.map(provCard).join('')}</div>`:empty('No '+b.service.toLowerCase()+' in '+b.area+' yet','Try another area, or check back soon.');
+  }else res=empty('Pick a service and an area','Providers matching both appear here.');
+  return `<div class="head"><div><h2>Book a service</h2><p>Your request waits in the provider's queue until they accept it. You get an SMS at each step.</p></div><span class="tag">${act} of ${MAXQ} active bookings</span></div>
+  <section class="card stack"><div class="stack" style="gap:10px"><h3>Service</h3><div class="tiles">${SERVICES.map(s=>`<button class="tile" data-act="pickservice" data-v="${esc(s)}" aria-pressed="${b.service===s}">${icon(s)}<span>${esc(s)}</span></button>`).join('')}</div></div>
+  <div class="stack" style="gap:10px"><h3>Area</h3><div class="chips">${AREAS.map(s=>`<button class="pick" data-act="pickarea" data-v="${esc(s)}" aria-pressed="${b.area===s}">${esc(s)}</button>`).join('')}</div></div>
+  <div class="row"><span class="small muted">Sort by</span><div class="seg" role="group" aria-label="Sort providers">${[['current','Default'],['rating','Highest rating'],['work','Most jobs done']].map(s=>`<button data-act="sort" data-v="${s[0]}" aria-pressed="${b.sort===s[0]}">${s[1]}</button>`).join('')}</div></div></section>${res}`;
+}
+function viewActive(){
+  const u=me(),act=activeOf(u.id),past=DB.bookings.filter(b=>b.userId===u.id&&(b.status==='CANCELLED'||b.status==='REJECTED')).sort((a,b)=>b.created-a.created).slice(0,8);
+  return `<div class="head"><div><h2>Active bookings</h2><p>Newest first. You can cancel while a request is waiting or accepted.</p></div><span class="tag">${act.length} of ${MAXQ}</span></div>
+  ${act.length?`<div class="list">${act.map(b=>bookingCard(b,tracker(b)+(b.status==='ACCEPTED'&&b.code?codeBox(b):'')+`<div class="actions">${payChip(b)}${b.status==='ACCEPTED'?payBtn('booking',b.no,b,true):''}${confirmBtn('cancel:'+b.no,'Cancel booking','Yes, cancel','cancel','data-no="'+b.no+'"')}</div>`)).join('')}</div>`:empty('No active bookings','Book a service to get started.','<button class="btn primary" data-act="tab" data-tab="book">Book a service</button>')}
+  ${past.length?`<div class="stack" style="gap:10px"><h3>Cancelled and rejected</h3><div class="list">${past.map(b=>bookingCard(b)).join('')}</div></div>`:''}`;
+}
+function viewDone(){
+  const u=me(),done=DB.bookings.filter(b=>b.userId===u.id&&b.status==='COMPLETED').sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
+  const by={};done.forEach(b=>{by[b.service]=(by[b.service]||0)+1});
+  const total=sum(done.map(paidAmt));
+  return `<div class="head"><div><h2>Completed services</h2><p>Every service a provider has finished for you, with payment status.</p></div><span class="tag COMPLETED">${done.length} completed · ${inr(total)} paid</span></div>
+  ${done.length?`<div class="svcsum" aria-label="Services completed">${Object.keys(by).map(s=>`<span>${esc(s)}${by[s]>1?' × '+by[s]:''}</span>`).join('')}</div><div class="list">${done.map(b=>bookingCard(b,`<div class="actions"><span class="muted small">Finished ${when(b.doneAt||b.created)}</span>${payChip(b)}${payBtn('booking',b.no,b,true)}${b.rating?`<span class="stars" aria-hidden="true">${stars(b.rating)}</span><span class="small">You rated ${b.rating}/5</span>`:'<button class="btn" data-act="tab" data-tab="rate">Rate this service</button>'}</div>`)).join('')}</div>`:empty('Nothing completed yet','Once a provider closes your booking with your job code, it shows up here.')}`;
+}
+function viewRate(){
+  const u=me(),all=DB.bookings.filter(b=>b.userId===u.id&&b.status==='COMPLETED').sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
+  const todo=all.filter(b=>!b.rating),rated=all.filter(b=>b.rating);
+  return `<div class="head"><div><h2>Rate your providers</h2><p>Ratings decide how providers are ranked for other customers. Each booking can be rated once.</p></div><span class="tag">${todo.length} waiting</span></div>
+  ${todo.length?`<div class="list">${todo.map(b=>{const p=acct('provider',b.providerId),sel=ui.rate[b.no]||0;
+    return `<article class="card item"><div class="top"><div class="svc"><span class="bub">${icon(b.service)}</span><div><strong>${esc(b.service)}</strong> by ${esc(p?p.name:'Unknown')} <span class="muted small">#${b.no}</span></div></div></div>
+    <div class="starpick" role="group" aria-label="Rating for booking ${b.no}">${[1,2,3,4,5].map(n=>`<button data-act="star" data-no="${b.no}" data-n="${n}" class="${n<=sel?'on':''}" aria-label="${n} star${n>1?'s':''}" aria-pressed="${n<=sel}">★</button>`).join('')}</div>
+    <div class="actions"><button class="btn primary" data-act="submitrate" data-no="${b.no}"${sel?'':' disabled'}>Submit rating</button><span class="muted small">${sel?sel+' out of 5':'Tap a star to choose'}</span></div></article>`}).join('')}</div>`:empty('You are all caught up','No completed bookings need a rating.')}
+  ${rated.length?`<div class="stack" style="gap:10px"><h3>Your past ratings</h3><div class="list">${rated.map(b=>{const p=acct('provider',b.providerId);return `<article class="card"><div class="top item" style="grid-auto-flow:column;justify-content:space-between;align-items:center"><span><strong>${esc(b.service)}</strong> by ${esc(p?p.name:'Unknown')}</span><span><span class="stars" aria-hidden="true">${stars(b.rating)}</span> <b>${b.rating}/5</b></span></div></article>`}).join('')}</div></div>`:''}`;
+}
+
+/* ---------- provider views ---------- */
+function viewRequests(){
+  const p=me(),q=waitingOf(p.id);
+  return `<div class="head"><div><h2>Booking requests</h2><p>First come, first served. Deal with the one at the front, then the next moves up.</p></div></div>
+  ${q.length?`<div class="list">${q.map((b,i)=>i===0?
+    `<article class="card next item"><div class="top"><div class="svc"><span class="bub">${icon(b.service)}</span><div><span class="tag ACCEPTED">Next in line</span> <strong>${esc(b.service)}</strong> <span class="muted small">#${b.no}</span></div></div></div>${custMeta(b,true)}
+    <div class="actions"><button class="btn primary" data-act="accept" data-no="${b.no}">Accept</button>${confirmBtn('reject:'+b.no,'Reject','Yes, reject','reject','data-no="'+b.no+'"')}<button class="btn" data-act="keep" data-no="${b.no}">Keep waiting</button></div>
+    <p class="muted small">Accepting texts the customer a job code. Keep waiting sends this request to the back of the queue.</p></article>`
+    :`<article class="card item"><div class="top"><div><span class="tag WAITING">Position ${i+1}</span> <strong>${esc(b.service)}</strong> <span class="muted small">#${b.no}</span></div></div>${custMeta(b,false)}</article>`).join('')}</div>`:empty('No waiting requests','New bookings from customers appear here, and you get an SMS too.')}`;
+}
+function viewAccepted(){
+  const p=me(),a=acceptedOf(p.id);
+  return `<div class="head"><div><h2>Accepted jobs</h2><p>When the work is finished, ask the customer for their 4-digit job code and enter it to close the job.</p></div><span class="tag">${a.length} of ${MAXQ}</span></div>
+  ${a.length?`<div class="list">${a.map(b=>`<article class="card item"><div class="top"><div class="svc"><span class="bub">${icon(b.service)}</span><div><strong>${esc(b.service)}</strong> <span class="muted small">#${b.no}</span></div></div><span class="tag ACCEPTED">ACCEPTED</span></div>${custMeta(b,true)}
+  <div class="actions">${payChip(b)}</div>
+  <form data-form="complete" data-no="${b.no}" class="stack" novalidate><div class="inline"><div class="field"><label for="cc-${b.no}">Job code from customer</label><input id="cc-${b.no}" name="code" inputmode="numeric" maxlength="4" placeholder="4 digits" autocomplete="off"></div><button class="btn primary">Close job</button></div><p class="form-error" role="alert" hidden></p></form></article>`).join('')}</div>`:empty('No accepted jobs','Accept a request to see it here.','<button class="btn primary" data-act="tab" data-tab="req">View requests</button>')}`;
+}
+function viewProvDone(){
+  const p=me(),done=DB.bookings.filter(b=>b.providerId===p.id&&b.status==='COMPLETED').sort((a,b)=>(b.doneAt||0)-(a.doneAt||0)).slice(0,10);
+  return `<div class="head"><div><h2>Completed jobs</h2><p>Your 10 most recent finished jobs.</p></div></div>${provStats(p)}
+  ${done.length?`<div class="list">${done.map(b=>`<article class="card item"><div class="top"><div class="svc"><span class="bub">${icon(b.service)}</span><div><strong>${esc(b.service)}</strong> <span class="muted small">#${b.no}</span></div></div><span class="tag COMPLETED">COMPLETED</span></div>${custMeta(b,false)}
+  <div class="actions"><span class="muted small">Finished ${when(b.doneAt||b.created)}</span>${payChip(b)}${(b.pay&&b.pay.status==='PAID')?'':`<button class="btn" data-act="cashin" data-kind="booking" data-id="${b.no}">Cash received</button>`}${b.rating?`<span class="stars" aria-hidden="true">${stars(b.rating)}</span><span class="small">Rated ${b.rating}/5</span>`:'<span class="small muted">Awaiting rating</span>'}</div></article>`).join('')}</div>`:empty('No completed jobs yet','Finished jobs are listed here.')}`;
+}
+
+/* ---------- trainers ---------- */
+const isMine=t=>t.ownerRole===role()&&t.ownerId===me().id;
+function trainerCard(t){
+  const o=acct(t.ownerRole,t.ownerId),a=me();
+  const s=DB.sessions.find(x=>x.listingId===t.id&&x.learnerRole===role()&&x.learnerId===a.id&&(x.status==='PENDING'||x.status==='ACCEPTED'));
+  let act;
+  if(isMine(t))act='<span class="tag">Your listing</span>';
+  else if(s)act=`<span class="tag ${s.status}">Request ${s.status.toLowerCase()}</span>${s.status==='ACCEPTED'&&o?`<span class="small">Call <b>${esc(o.phone)}</b></span>${payChip(s)}${payBtn('session',s.id,s,true)}`:''}`;
+  else if(ui.reqOpen===t.id)act='';
+  else act=`<button class="btn primary" data-act="reqopen" data-id="${t.id}">Request a session</button>`;
+  const form=(ui.reqOpen===t.id&&!isMine(t)&&!s)?`<form data-form="request" data-id="${t.id}" class="stack" novalidate><div class="field"><label for="rq-${t.id}">Tell ${esc(o?first(o.name):'the trainer')} what you want to learn</label><textarea id="rq-${t.id}" name="message" maxlength="240" placeholder="Your level, what you want to cover, and when you are free"></textarea></div><p class="form-error" role="alert" hidden></p><div class="actions"><button class="btn primary">Send request</button><button type="button" class="btn ghost" data-act="reqclose">Cancel</button></div></form>`:'';
+  return `<article class="card item"><div class="top"><h3>${esc(t.skill)}</h3><span class="tag">${esc(t.category)}</span></div>
+  <div class="who">${avatar(o&&o.name)}<div><strong>${esc(o?o.name:'Unknown')}</strong><span class="muted small">For ${esc(t.level.toLowerCase())}</span></div></div>
+  <p>${esc(t.bio)}</p><div class="meta"><span><b>${inr(t.fee)}</b> per session</span><span><b>${esc(t.mode)}</b></span><span>${esc(t.area)}</span></div>${act?`<div class="actions">${act}</div>`:''}${form}</article>`;
+}
+function trainerResults(){
+  const f=ui.filter,q=f.q.trim().toLowerCase();
+  const list=DB.trainers.filter(t=>{
+    if(f.cat&&t.category!==f.cat)return false;if(f.mode&&t.mode!==f.mode)return false;
+    if(q){const o=acct(t.ownerRole,t.ownerId);if((t.skill+' '+t.bio+' '+t.category+' '+(o?o.name:'')).toLowerCase().indexOf(q)<0)return false}
+    return true;
+  }).sort((a,b)=>b.created-a.created);
+  return list.length?`<div class="cols">${list.map(trainerCard).join('')}</div>`:empty('No trainers match','Clear the search or filters, or list a skill of your own under "Teach a skill".');
+}
+const sessionsIn=()=>{const a=me();return DB.sessions.filter(s=>s.trainerRole===role()&&s.trainerId===a.id).sort((x,y)=>y.created-x.created)};
+const sessionsOut=()=>{const a=me();return DB.sessions.filter(s=>s.learnerRole===role()&&s.learnerId===a.id).sort((x,y)=>y.created-x.created)};
+function viewTrain(){
+  const a=me(),inc=sessionsIn().filter(s=>s.status==='PENDING').length;
+  const sub=`<div class="seg" role="group" aria-label="Trainer sections">${[['find','Find a trainer'],['teach','Teach a skill'],['sess','Sessions'+(inc?' ('+inc+')':'')]].map(t=>`<button data-act="traintab" data-v="${t[0]}" aria-pressed="${ui.trainTab===t[0]}">${esc(t[1])}</button>`).join('')}</div>`;
+  let body='';
+  if(ui.trainTab==='find'){
+    body=`<div class="filters"><div class="field"><label for="tq">Search skills</label><input id="tq" type="search" value="${esc(ui.filter.q)}" placeholder="Coding, dance, guitar..."></div>
+    <div class="field"><label for="tcat">Category</label><select id="tcat" data-bind="cat">${opts(CATS,ui.filter.cat,'All categories')}</select></div>
+    <div class="field"><label for="tmode">Mode</label><select id="tmode" data-bind="mode">${opts(['Online','In person'],ui.filter.mode,'Online or in person')}</select></div></div><div id="trainer-results">${trainerResults()}</div>`;
+  }else if(ui.trainTab==='teach'){
+    const mine=DB.trainers.filter(isMine);
+    body=`<div class="stack"><div class="stack" style="gap:10px"><h3>Your listings</h3>${mine.length?`<div class="cols">${mine.map(t=>`<article class="card item"><div class="top"><strong>${esc(t.skill)}</strong><span class="tag">${esc(t.category)}</span></div><div class="meta"><span><b>${inr(t.fee)}</b> per session</span><span>${esc(t.mode)}</span><span>${esc(t.area)}</span></div><div class="actions">${confirmBtn('rm:'+t.id,'Remove listing','Yes, remove','rmlisting','data-id="'+t.id+'"')}</div></article>`).join('')}</div>`:empty('You are not teaching anything yet','Any skill counts: coding, dancing, cooking, a language, a sport.')}</div>
+    <form id="f-teach" data-form="teach" class="card stack" novalidate><h3>Add a skill you can teach</h3><div class="grid2">
+    <div class="field"><label for="tc-skill">Skill</label><input id="tc-skill" name="skill" maxlength="60" placeholder="e.g. Guitar for beginners"></div>
+    <div class="field"><label for="tc-cat">Category</label><select id="tc-cat" name="category">${opts(CATS,'')}</select></div>
+    <div class="field"><label for="tc-level">Who it is for</label><select id="tc-level" name="level">${opts(LEVELS,'')}</select></div>
+    <div class="field"><label for="tc-mode">Mode</label><select id="tc-mode" name="mode">${opts(['Online','In person'],'')}</select></div>
+    <div class="field"><label for="tc-area">Area (for in person)</label><select id="tc-area" name="area">${opts(AREAS,a.area)}</select></div>
+    <div class="field"><label for="tc-fee">Fee per session (₹)</label><input id="tc-fee" name="fee" type="number" min="0" max="100000" inputmode="numeric" value="300"></div></div>
+    <div class="field"><label for="tc-bio">About your teaching</label><textarea id="tc-bio" name="bio" maxlength="240" placeholder="Your experience and what a learner will be able to do after your sessions"></textarea></div>
+    <p class="form-error" role="alert" hidden></p><div><button class="btn primary">Publish listing</button></div></form></div>`;
+  }else{
+    const inc2=sessionsIn(),out=sessionsOut();
+    body=`<div class="stack"><div class="stack" style="gap:10px"><h3>Requests from learners</h3>${inc2.length?`<div class="list">${inc2.map(s=>{const l=acct(s.learnerRole,s.learnerId);
+      return `<article class="card item"><div class="top"><div><strong>${esc(s.skill)}</strong> <span class="muted small">from ${esc(l?l.name:'Unknown')}</span></div><span class="tag ${s.status}">${s.status}</span></div><p>“${esc(s.message)}”</p><div class="meta"><span>Sent <b>${when(s.created)}</b></span>${s.status==='ACCEPTED'&&l?`<span>Call <b>${esc(l.phone)}</b></span>`:''}</div>
+      ${s.status==='PENDING'?`<div class="actions"><button class="btn primary" data-act="sess" data-id="${s.id}" data-v="ACCEPTED">Accept</button><button class="btn" data-act="sess" data-id="${s.id}" data-v="DECLINED">Decline</button></div>`:''}
+      ${s.status==='ACCEPTED'?`<div class="actions">${payChip(s)}${(s.pay&&s.pay.status==='PAID')?'':`<button class="btn" data-act="cashin" data-kind="session" data-id="${s.id}">Cash received</button>`}</div>`:''}</article>`}).join('')}</div>`:empty('No requests yet','When someone asks to learn from you, it shows here.')}</div>
+    <div class="stack" style="gap:10px"><h3>Sessions you asked for</h3>${out.length?`<div class="list">${out.map(s=>{const t=acct(s.trainerRole,s.trainerId);
+      return `<article class="card item"><div class="top"><div><strong>${esc(s.skill)}</strong> <span class="muted small">with ${esc(t?t.name:'Unknown')}</span></div><span class="tag ${s.status}">${s.status}</span></div><p>“${esc(s.message)}”</p><div class="meta"><span>Sent <b>${when(s.created)}</b></span>${s.status==='ACCEPTED'&&t?`<span>Call <b>${esc(t.phone)}</b></span>`:''}</div>
+      ${s.status==='ACCEPTED'?`<div class="actions">${payChip(s)}${payBtn('session',s.id,s,true)}</div>`:''}
+      ${s.status==='PENDING'?`<div class="actions"><button class="btn ghost danger-text" data-act="sess" data-id="${s.id}" data-v="CANCELLED">Withdraw request</button></div>`:''}</article>`}).join('')}</div>`:empty('You have not requested a session','Find a trainer and send a request.','<button class="btn primary" data-act="traintab" data-v="find">Find a trainer</button>')}</div></div>`;
+  }
+  return `<div class="head"><div><h2>Trainers</h2><p>Learn from people nearby, or teach a skill of your own. Anyone can do both.</p></div></div><div class="sub">${sub}</div>${body}`;
+}
+
+/* ---------- profile ---------- */
+function viewProfile(){
+  const a=me(),isP=role()==='provider';
+  return `<div class="head"><div><h2>Your profile</h2><p>${isP?'Customers see your name, service, area, rating, jobs done and starting charge.':'Providers see your name, phone and email when you book.'}</p></div><span class="tag COMPLETED">Phone verified</span></div>
+  ${isP?provStats(a):''}
+  <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))">
+  <form class="card stack" data-form="details" novalidate><h3>Details</h3><dl class="kv"><dt>${isP?'Provider':'User'} ID</dt><dd><b>${a.id}</b></dd></dl>
+  <div class="field"><label for="pf-name">Name</label><input id="pf-name" name="name" value="${esc(a.name)}"></div>
+  <div class="field"><label for="pf-phone">Phone</label><input id="pf-phone" name="phone" inputmode="numeric" maxlength="10" value="${esc(a.phone)}"></div>
+  <div class="field"><label for="pf-email">Email</label><input id="pf-email" name="email" type="email" value="${esc(a.email)}"></div>
+  <div class="field"><label for="pf-area">Area</label><select id="pf-area" name="area">${opts(AREAS,a.area)}</select></div>
+  ${isP?`<div class="field"><label for="pf-service">Service</label><select id="pf-service" name="service">${opts(SERVICES,a.service)}</select></div><div class="field"><label for="pf-fee">Starting charge (₹)</label><input id="pf-fee" name="fee" type="number" min="0" max="100000" value="${a.fee}"></div>`:''}
+  <p class="form-error" role="alert" hidden></p><div><button class="btn primary">Save details</button></div></form>
+  <div class="stack"><form class="card stack" data-form="password" novalidate><h3>Change password</h3>
+  <div class="field"><label for="pw-old">Current password</label><input id="pw-old" name="old" type="password" autocomplete="current-password"></div>
+  <div class="field"><label for="pw-new">New password</label><input id="pw-new" name="next" type="password" autocomplete="new-password"></div>
+  <p class="form-error" role="alert" hidden></p><div><button class="btn primary">Update password</button></div></form>
+  <form class="card stack" data-form="security" novalidate><h3>Security answers</h3><p class="muted small">Used when you reset a forgotten password without SMS.</p>
+  <div class="field"><label for="sc-pass">Current password</label><input id="sc-pass" name="old" type="password" autocomplete="current-password"></div>
+  <div class="field"><label for="sc-friend">New best friend's name</label><input id="sc-friend" name="friend"></div>
+  <div class="field"><label for="sc-mail">New personal email answer</label><input id="sc-mail" name="mail"></div>
+  <p class="form-error" role="alert" hidden></p><div><button class="btn primary">Save answers</button></div></form></div></div>`;
+}
+
+/* ---------- sheets: SMS inbox and Yogya Pay checkout ---------- */
+function smsSheet(){
+  const a=me(),list=(a&&!ui.smsAll)?DB.sms.filter(m=>m.to===a.phone):DB.sms,ids=ui.modal.fresh||[];
+  return `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t" tabindex="-1"><div class="sheethead"><h3 id="sh-t">SMS inbox</h3><button class="btn icon ghost" data-act="closemodal" aria-label="Close">${icon('x')}</button></div>
+  <p class="muted small">Demo phone. These are the messages Yogya would send by SMS. Nothing leaves this page.</p>
+  ${a?`<div class="seg" role="group" aria-label="Whose messages"><button data-act="smsscope" data-v="mine" aria-pressed="${!ui.smsAll}">My number</button><button data-act="smsscope" data-v="all" aria-pressed="${ui.smsAll}">All demo numbers</button></div>`:''}
+  <div class="stack" style="gap:10px">${list.length?list.map(m=>`<div class="sms ${ids.includes(m.id)?'new':''}"><div class="sm"><b>YOGYA</b><span>to ${esc(m.to)} · ${when(m.ts)}</span></div><p>${esc(m.text)}</p></div>`).join(''):empty('No messages yet','Codes and booking updates appear here.')}</div></div>`;
+}
+function paySheet(){
+  const m=ui.modal,x=getItem(m.kind,m.id);if(!x)return '';
+  const pt=parties(m.kind,x);
+  const head=`<div class="sheethead"><h3 id="sh-t" style="font-size:19px">Yogya Pay <span class="tag" style="vertical-align:middle">DEMO MODE</span></h3>${m.step==='processing'?'':`<button class="btn icon ghost" data-act="closemodal" aria-label="Close">${icon('x')}</button>`}</div>`;
+  const sum=`<div><div class="amount">${inr(x.amount)}</div><div class="muted small">${esc(pt.label)} · to ${esc(pt.payee?pt.payee.name:'')}</div></div>`;
+  const foot='<p class="muted small">Test checkout. No real money moves and no real UPI request is sent.</p>';
+  let body='';
+  if(m.step==='method'){
+    const upi=m.method==='upi';
+    body=`${sum}<div class="seg" role="group" aria-label="Payment method"><button data-act="paymethod" data-v="upi" aria-pressed="${upi}">UPI</button><button data-act="paymethod" data-v="cash" aria-pressed="${!upi}">Cash after service</button></div>
+    ${upi?`<form data-form="payupi" novalidate class="stack"><div class="field"><label for="upi">UPI ID</label><input id="upi" name="upi" value="${esc(m.upi||'')}" placeholder="name@upi" autocomplete="off" autocapitalize="none"><span class="hint">Any ID in the form name@bank works in demo mode.</span></div><p class="form-error" role="alert" hidden></p><button class="btn primary block">Pay ${inr(x.amount)}</button></form>`
+    :`<div class="stack"><p>You will hand ${inr(x.amount)} in cash to ${esc(pt.payee?first(pt.payee.name):'the provider')} after the service. They confirm it in Yogya.</p><button class="btn primary block" data-act="paycash">Choose cash</button></div>`}${foot}`;
+  }else if(m.step==='processing'){
+    body=`${sum}<div class="center" role="status"><div class="spin"></div><strong>Sending request to ${esc(m.upi)}</strong><span class="muted small">Waiting for your UPI app</span></div>`;
+  }else if(m.step==='approve'){
+    body=`${sum}<div class="stack"><p>A collect request for ${inr(x.amount)} was sent to <b>${esc(m.upi)}</b>. In a real app you would approve it in your UPI app. Pick an outcome to test:</p><div class="actions"><button class="btn primary" data-act="payapprove">Approve in UPI app</button><button class="btn" data-act="paydecline">Decline</button></div></div>${foot}`;
+  }else if(m.step==='done'){
+    body=`<div class="center"><div class="okmark">${icon('check')}</div><h3>Payment successful</h3><div class="amount">${inr(x.amount)}</div></div>
+    <dl class="kv"><dt>Reference</dt><dd><b>${esc(x.pay&&x.pay.ref)}</b></dd><dt>Method</dt><dd>${esc(x.pay&&x.pay.method)}</dd><dt>Paid to</dt><dd>${esc(pt.payee?pt.payee.name:'')}</dd><dt>For</dt><dd>${esc(pt.label)}</dd><dt>Time</dt><dd>${x.pay?when(x.pay.ts):''}</dd></dl>
+    <button class="btn primary block" data-act="closemodal">Done</button>`;
+  }else if(m.step==='cashdone'){
+    body=`<div class="center"><div class="okmark">${icon('check')}</div><h3>Cash payment noted</h3><p class="muted">Pay ${inr(x.amount)} in cash after the service. ${esc(pt.payee?first(pt.payee.name):'The provider')} confirms it in Yogya.</p></div><button class="btn primary block" data-act="closemodal">Done</button>`;
+  }else{
+    body=`<div class="center"><div class="okmark bad">${icon('x')}</div><h3>Payment declined</h3><p class="muted">No money was taken. You can try again or choose cash.</p></div><div class="actions"><button class="btn primary" data-act="payretry">Try again</button><button class="btn ghost" data-act="closemodal">Close</button></div>`;
+  }
+  return `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t" tabindex="-1">${(m.step==='done'||m.step==='cashdone'||m.step==='failed')?'':head}${body}</div>`;
+}
+function renderModal(){
+  const el=$('#modal');
+  if(!ui.modal){el.innerHTML='';ui.modalKey='';return}
+  const html=ui.modal.type==='sms'?smsSheet():paySheet();
+  el.innerHTML=`<div class="overlay" data-act="scrim">${html}</div>`;
+  const key=ui.modal.type+':'+(ui.modal.step||'');
+  if(key!==ui.modalKey){ui.modalKey=key;const s=el.querySelector('.sheet');if(s)s.focus()}
+}
+function closeModal(){clearTimeout(ui.timer);ui.modal=null;render()}
+
+/* ---------- render ---------- */
+const app=$('#app');
+function render(){
+  if(DB.session&&!me())DB.session=null;
+  app.innerHTML=me()?viewShell():viewAuth();
+  renderModal();
+}
+
+/* ---------- rules ---------- */
+function findAccount(r,ident){
+  ident=String(ident).trim().toLowerCase();if(!ident)return null;
+  return (r==='user'?DB.users:DB.providers).find(a=>String(a.id)===ident||a.phone===ident||a.email.toLowerCase()===ident)||null;
+}
+const same=(a,b)=>String(a).trim().toLowerCase()===String(b).trim().toLowerCase();
+function checkDetails(f,r,selfId){
+  if(f.name.length<2)return 'Enter your full name.';
+  if(!/^\d{10}$/.test(f.phone))return 'Mobile number must be 10 digits.';
+  if(!/^\S+@\S+\.\S+$/.test(f.email))return 'Enter a valid email address.';
+  const list=r==='user'?DB.users:DB.providers;
+  if(list.some(a=>a.id!==selfId&&a.phone===f.phone))return 'That mobile number is already registered.';
+  if(list.some(a=>a.id!==selfId&&a.email.toLowerCase()===f.email.toLowerCase()))return 'That email is already registered.';
+  return '';
+}
+function checkFee(v){const n=Number(v);return (v!==''&&n>=0&&n<=100000)?Math.round(n):null}
+function login(r,acc){
+  DB.session={role:r,id:acc.id};ui.confirm=null;ui.reqOpen=null;ui.trainTab='find';ui.step='form';ui.ctx=null;otp=null;ui.tab='home';
+  ui.book={service:'Plumber',area:r==='user'?acc.area:'Dehradun',sort:'current'};
+}
+function startOtp(purpose,r,phone,extra){
+  ui.ctx=Object.assign({purpose,role:r,phone},extra||{});ui.step='otp';newOtp(phone);render();
+}
+
+const F={
+  signin(form,fd){
+    const r=ui.authRole,acc=findAccount(r,fd.get('ident'));
+    if(!acc)return formErr(form,(r==='user'?'User':'Provider')+' ID, phone or email not found.');
+    if(fd.get('password')!==acc.password)return formErr(form,'Incorrect password. Try "SMS code" or "Forgot password?".');
+    login(r,acc);commit();toast('Welcome, '+acc.name+'!');
+  },
+  signinotp(form,fd){
+    const r=ui.authRole,acc=findAccount(r,fd.get('ident'));
+    if(!acc)return formErr(form,(r==='user'?'User':'Provider')+' ID, phone or email not found.');
+    startOtp('login',r,acc.phone,{accId:acc.id});
+  },
+  resetotp(form,fd){
+    const r=ui.authRole,acc=findAccount(r,fd.get('ident'));
+    if(!acc)return formErr(form,'No account found for that ID, phone or email.');
+    startOtp('reset',r,acc.phone,{accId:acc.id});
+  },
+  recover(form,fd){
+    const acc=findAccount(ui.authRole,fd.get('ident'));
+    if(!acc)return formErr(form,'No account found for that ID, phone or email.');
+    if(!same(fd.get('friend'),acc.friend)||!same(fd.get('mail'),acc.mail))return formErr(form,'Security answers do not match.');
+    if(String(fd.get('password')).length<6)return formErr(form,'New password must be at least 6 characters.');
+    acc.password=fd.get('password');ui.authMode='signin';commit();toast('Password changed. Sign in with your new password.');
+  },
+  signup(form,fd){
+    const r=ui.authRole,f={name:String(fd.get('name')).trim(),phone:String(fd.get('phone')).replace(/\s/g,''),email:String(fd.get('email')).trim()};
+    let err=checkDetails(f,r,0);if(err)return formErr(form,err);
+    if(String(fd.get('password')).length<6)return formErr(form,'Password must be at least 6 characters.');
+    const friend=String(fd.get('friend')).trim(),mail=String(fd.get('mail')).trim();
+    if(!friend||!mail)return formErr(form,'Answer both security questions.');
+    const acc={name:f.name,phone:f.phone,email:f.email,password:fd.get('password'),area:fd.get('area'),friend,mail};
+    if(r==='provider'){const fee=checkFee(fd.get('fee'));if(fee===null)return formErr(form,'Enter a starting charge between 0 and 100000.');acc.service=fd.get('service');acc.fee=fee;acc.ratingTotal=0;acc.ratingCount=0;acc.workCount=0}
+    startOtp('signup',r,f.phone,{acc});
+  },
+  verify(form,fd){
+    const c=ui.ctx;if(!c)return;
+    if(c.purpose==='reset'&&String(fd.get('password')).length<6)return formErr(form,'New password must be at least 6 characters.');
+    const err=checkOtp(fd.get('code'));if(err)return formErr(form,err);
+    otp=null;
+    if(c.purpose==='signup'){
+      const acc=c.acc;
+      if(c.role==='user'){acc.id=DB.nextUser++;DB.users.push(acc)}else{acc.id=DB.nextProv++;DB.providers.push(acc)}
+      login(c.role,acc);commit();toast('Phone verified. Your '+(c.role==='user'?'User':'Provider')+' ID is '+acc.id+'. Keep it for signing in.',false,7000);
+    }else if(c.purpose==='login'){
+      const acc=acct(c.role,c.accId);login(c.role,acc);commit();toast('Welcome, '+acc.name+'!');
+    }else{
+      const acc=acct(c.role,c.accId);acc.password=fd.get('password');ui.step='form';ui.ctx=null;ui.authMode='signin';commit();toast('Password changed. Sign in with your new password.');
+    }
+  },
+  complete(form,fd){
+    const p=me(),b=DB.bookings.find(x=>x.no===Number(form.dataset.no));if(!b||b.status!=='ACCEPTED')return;
+    if(String(fd.get('code')).trim()!==b.code)return formErr(form,'That code does not match. Ask the customer for the code from their SMS.');
+    b.status='COMPLETED';b.doneAt=Date.now();p.workCount++;
+    if(b.pay&&b.pay.status==='CASH')b.pay={status:'PAID',method:'Cash',ref:'CASH'+b.no,ts:Date.now()};
+    const u=acct('user',b.userId);
+    if(u)sms(u.phone,`Your ${b.service} job #${b.no} was closed by ${p.name}. ${b.pay&&b.pay.status==='PAID'?'Thank you for paying.':'Amount due '+inr(b.amount)+'.'} Please rate your experience in Yogya.`);
+    commit();toast('Job #'+b.no+' closed.');
+  },
+  payupi(form,fd){
+    const v=String(fd.get('upi')).trim();ui.modal.upi=v;
+    if(!/^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(v))return formErr(form,'Enter a UPI ID like name@upi.');
+    ui.modal.step='processing';renderModal();
+    clearTimeout(ui.timer);ui.timer=setTimeout(()=>{if(ui.modal&&ui.modal.type==='pay'&&ui.modal.step==='processing'){ui.modal.step='approve';renderModal()}},1500);
+  },
+  request(form,fd){
+    const id=Number(form.dataset.id),t=DB.trainers.find(x=>x.id===id),msg=String(fd.get('message')).trim();
+    if(!t)return;if(msg.length<5)return formErr(form,'Write a short message so the trainer knows what you need.');
+    DB.sessions.push({id:DB.nextSession++,listingId:t.id,skill:t.skill,trainerRole:t.ownerRole,trainerId:t.ownerId,learnerRole:role(),learnerId:me().id,message:msg,status:'PENDING',created:Date.now(),amount:t.fee,pay:null});
+    const o=acct(t.ownerRole,t.ownerId);if(o)sms(o.phone,`${me().name} wants to learn ${t.skill} from you. Open Yogya > Trainers > Sessions to reply.`);
+    ui.reqOpen=null;commit();toast('Request sent.');
+  },
+  teach(form,fd){
+    const skill=String(fd.get('skill')).trim(),fee=checkFee(fd.get('fee')),bio=String(fd.get('bio')).trim(),mode=fd.get('mode');
+    if(skill.length<2)return formErr(form,'Enter the skill you teach.');
+    if(fee===null)return formErr(form,'Enter a fee between 0 and 100000.');
+    if(bio.length<10)return formErr(form,'Describe your teaching in at least 10 characters.');
+    DB.trainers.push({id:DB.nextTrainer++,ownerRole:role(),ownerId:me().id,skill,category:fd.get('category'),level:fd.get('level'),mode,area:mode==='Online'?'Anywhere (online)':fd.get('area'),fee,bio,created:Date.now()});
+    commit();toast('Listing published. Learners can now find you.');
+  },
+  details(form,fd){
+    const a=me(),r=role(),f={name:String(fd.get('name')).trim(),phone:String(fd.get('phone')).replace(/\s/g,''),email:String(fd.get('email')).trim()};
+    const err=checkDetails(f,r,a.id);if(err)return formErr(form,err);
+    if(r==='provider'){const fee=checkFee(fd.get('fee'));if(fee===null)return formErr(form,'Enter a starting charge between 0 and 100000.');a.fee=fee;a.service=fd.get('service')}
+    a.name=f.name;a.phone=f.phone;a.email=f.email;a.area=fd.get('area');
+    commit();toast('Details saved.');
+  },
+  password(form,fd){
+    const a=me();if(fd.get('old')!==a.password)return formErr(form,'Current password is incorrect.');
+    if(String(fd.get('next')).length<6)return formErr(form,'New password must be at least 6 characters.');
+    a.password=fd.get('next');commit();toast('Password changed.');
+  },
+  security(form,fd){
+    const a=me();if(fd.get('old')!==a.password)return formErr(form,'Current password is incorrect.');
+    const fr=String(fd.get('friend')).trim(),ml=String(fd.get('mail')).trim();if(!fr||!ml)return formErr(form,'Fill in both answers.');
+    a.friend=fr;a.mail=ml;commit();toast('Security answers updated.');
+  }
+};
+
+function recordPayment(kind,id,method,status){
+  const x=getItem(kind,id);if(!x)return;const pt=parties(kind,x);
+  if(status==='PAID'){
+    x.pay={status:'PAID',method,ref:method==='Cash'?'CASH'+id:'YGP'+String(Math.floor(10000000+Math.random()*89999999)),ts:Date.now()};
+    if(pt.payee)sms(pt.payee.phone,`You received ${inr(x.amount)} from ${pt.payer?pt.payer.name:'a customer'} for ${pt.label}. Ref ${x.pay.ref}.`);
+    if(pt.payer)sms(pt.payer.phone,`Payment of ${inr(x.amount)} received for ${pt.label}. Ref ${x.pay.ref}. Thank you!`);
+  }else x.pay={status:'CASH',method:'Cash',ts:Date.now()};
+}
+
+const A={
+  authrole(el){ui.authRole=el.dataset.role;render()},
+  authmode(el){ui.authMode=el.dataset.mode;ui.step='form';ui.ctx=null;otp=null;render()},
+  method(el){ui.method=el.dataset.v;render()},
+  fmethod(el){ui.fmethod=el.dataset.v;render()},
+  forgot(){ui.authMode='forgot';render()},
+  demo(el){ui.authRole=el.dataset.role;ui.authMode='signin';ui.method='password';ui.step='form';render();$('#si-ident').value=el.dataset.role==='user'?'1':'100';$('#si-pass').value='demo123'},
+  otpback(){ui.step='form';ui.ctx=null;otp=null;render()},
+  resend(){if(!ui.ctx)return;newOtp(ui.ctx.phone);render();toast('A new code was sent.')},
+  signout(){DB.session=null;ui.authMode='signin';ui.step='form';ui.ctx=null;ui.modal=null;commit()},
+  theme(){
+    const root=document.documentElement,cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    root.setAttribute('data-theme',cur==='dark'?'light':'dark');
+  },
+  tab(el){ui.tab=el.dataset.tab;ui.confirm=null;render();window.scrollTo(0,0)},
+  quick(el){ui.book.service=el.dataset.v;ui.book.area=me().area;ui.tab='book';render();window.scrollTo(0,0)},
+  pickservice(el){ui.book.service=el.dataset.v;render()},
+  pickarea(el){ui.book.area=el.dataset.v;render()},
+  sort(el){ui.book.sort=el.dataset.v;render()},
+  book(el){
+    const u=me(),p=acct('provider',Number(el.dataset.id));if(!p)return;
+    if(activeOf(u.id).length>=MAXQ)return toast('You already have '+MAXQ+' active bookings. Complete or cancel one first.',true);
+    if(waitingOf(p.id).length>=MAXQ)return toast("This provider's queue is full.",true);
+    const b={no:DB.nextBooking++,userId:u.id,providerId:p.id,service:p.service,area:p.area,status:'WAITING',created:Date.now(),seq:++DB.seq,rating:null,amount:p.fee,code:null,pay:null};
+    DB.bookings.push(b);
+    sms(u.phone,`Booking #${b.no} for ${b.service} was sent to ${p.name}. You will get an SMS when it is accepted.`);
+    sms(p.phone,`New booking request #${b.no} from ${u.name} (${b.service}, ${b.area}). Open Yogya to accept or reject.`);
+    ui.tab='active';commit();window.scrollTo(0,0);toast('Booking #'+b.no+' sent. Status: WAITING.');
+  },
+  ask(el){ui.confirm=el.dataset.key;render()},
+  noask(){ui.confirm=null;render()},
+  cancel(el){
+    const b=DB.bookings.find(x=>x.no===Number(el.dataset.no));
+    if(!b||(b.status!=='WAITING'&&b.status!=='ACCEPTED'))return toast('This booking can no longer be cancelled.',true);
+    b.status='CANCELLED';ui.confirm=null;
+    const p=acct('provider',b.providerId);if(p)sms(p.phone,`Booking #${b.no} (${b.service}) was cancelled by ${me().name}.`);
+    commit();toast('Booking #'+b.no+' cancelled.');
+  },
+  star(el){ui.rate[el.dataset.no]=Number(el.dataset.n);render()},
+  submitrate(el){
+    const no=Number(el.dataset.no),n=ui.rate[no],b=DB.bookings.find(x=>x.no===no);if(!b||b.rating||!n)return;
+    const p=acct('provider',b.providerId);b.rating=n;if(p){p.ratingTotal+=n;p.ratingCount++;sms(p.phone,`${me().name} rated your ${b.service} job #${b.no}: ${n}/5.`)}
+    delete ui.rate[no];commit();toast('Thanks. '+(p?p.name+' now has '+avg(p).toFixed(1)+'/5.':'Rating saved.'));
+  },
+  accept(el){
+    const p=me(),b=DB.bookings.find(x=>x.no===Number(el.dataset.no));if(!b||b.status!=='WAITING')return;
+    if(acceptedOf(p.id).length>=MAXQ)return toast('Your accepted list is full ('+MAXQ+'). Close a job first.',true);
+    b.status='ACCEPTED';b.seq=++DB.seq;b.code=String(Math.floor(1000+Math.random()*9000));
+    const u=acct('user',b.userId);if(u)sms(u.phone,`Booking #${b.no} accepted by ${p.name}. Your job code is ${b.code}. Share it only when the work is finished.`);
+    commit();toast('Booking #'+b.no+' accepted. The customer was sent a job code.');
+  },
+  reject(el){
+    const b=DB.bookings.find(x=>x.no===Number(el.dataset.no));if(!b||b.status!=='WAITING')return;
+    b.status='REJECTED';ui.confirm=null;
+    const u=acct('user',b.userId);if(u)sms(u.phone,`Booking #${b.no} for ${b.service} could not be taken by ${me().name}. Please book another provider.`);
+    commit();toast('Booking #'+b.no+' rejected.');
+  },
+  keep(el){
+    const p=me(),b=DB.bookings.find(x=>x.no===Number(el.dataset.no));if(!b)return;
+    if(waitingOf(p.id).length<2)return toast('This is the only request in your queue.');
+    b.seq=++DB.seq;commit();toast('Moved to the back of the queue.');
+  },
+  traintab(el){ui.trainTab=el.dataset.v;ui.tab='train';ui.reqOpen=null;ui.confirm=null;render()},
+  reqopen(el){ui.reqOpen=Number(el.dataset.id);render();const t=$('#rq-'+el.dataset.id);if(t)t.focus()},
+  reqclose(){ui.reqOpen=null;render()},
+  rmlisting(el){
+    const id=Number(el.dataset.id);DB.trainers=DB.trainers.filter(t=>t.id!==id);
+    DB.sessions.forEach(s=>{if(s.listingId===id&&s.status==='PENDING')s.status='CANCELLED'});
+    ui.confirm=null;commit();toast('Listing removed.');
+  },
+  sess(el){
+    const s=DB.sessions.find(x=>x.id===Number(el.dataset.id));if(!s||s.status!=='PENDING')return;
+    s.status=el.dataset.v;
+    const l=acct(s.learnerRole,s.learnerId),t=acct(s.trainerRole,s.trainerId);
+    if(s.status==='ACCEPTED'&&l)sms(l.phone,`${t?t.name:'The trainer'} accepted your ${s.skill} session request. Fee ${inr(s.amount)}. Open Yogya to pay.`);
+    if(s.status==='DECLINED'&&l)sms(l.phone,`${t?t.name:'The trainer'} could not take your ${s.skill} request. Try another trainer.`);
+    commit();toast(s.status==='ACCEPTED'?'Accepted. The learner can now see your phone number.':s.status==='DECLINED'?'Request declined.':'Request withdrawn.');
+  },
+  /* SMS and payment sheets */
+  sms(){const a=me(),mine=(a&&!ui.smsAll)?DB.sms.filter(m=>m.to===a.phone):DB.sms;ui.modal={type:'sms',fresh:mine.filter(m=>!m.read).map(m=>m.id)};DB.sms.forEach(m=>{if(!a||m.to===a.phone)m.read=true});save();render()},
+  smsscope(el){ui.smsAll=el.dataset.v==='all';const keep=ui.modal.fresh;ui.modal={type:'sms',fresh:keep};renderModal()},
+  closemodal(){closeModal()},
+  scrim(el,e){if(e.target===el&&!(ui.modal&&ui.modal.step==='processing'))closeModal()},
+  pay(el){ui.modal={type:'pay',kind:el.dataset.kind,id:Number(el.dataset.id),step:'method',method:'upi',upi:''};renderModal()},
+  paymethod(el){ui.modal.method=el.dataset.v;renderModal()},
+  paycash(){const m=ui.modal;recordPayment(m.kind,m.id,'Cash','CASH');m.step='cashdone';save();render()},
+  payapprove(){const m=ui.modal;recordPayment(m.kind,m.id,'UPI','PAID');m.step='done';save();render()},
+  paydecline(){ui.modal.step='failed';renderModal()},
+  payretry(){ui.modal.step='method';renderModal()},
+  cashin(el){
+    const x=getItem(el.dataset.kind,Number(el.dataset.id));if(!x)return;
+    recordPayment(el.dataset.kind,Number(el.dataset.id),'Cash','PAID');commit();toast('Cash payment recorded.');
+  }
+};
+
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el||el.disabled)return;
+  if(el.dataset.act==='scrim'&&e.target!==el)return;
+  const f=A[el.dataset.act];if(f)f(el,e);
+});
+document.addEventListener('submit',e=>{
+  const form=e.target.closest('form[data-form]');if(!form)return;e.preventDefault();
+  const f=F[form.dataset.form];if(f){formErr(form,'');f(form,new FormData(form))}
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='tq'){ui.filter.q=e.target.value;const r=$('#trainer-results');if(r)r.innerHTML=trainerResults()}
+  if(e.target.id==='upi'&&ui.modal)ui.modal.upi=e.target.value;
+});
+document.addEventListener('change',e=>{
+  const b=e.target.dataset&&e.target.dataset.bind;
+  if(b){ui.filter[b]=e.target.value;const r=$('#trainer-results');if(r)r.innerHTML=trainerResults()}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&ui.modal&&ui.modal.step!=='processing')closeModal()});
+
+/* resend countdown */
+setInterval(()=>{
+  const b=$('#resend-btn');if(!b||!otp)return;
+  const left=Math.ceil(30-(Date.now()-otp.sentAt)/1000);
+  if(left>0){b.disabled=true;b.textContent='Resend code in '+left+'s'}else{b.disabled=false;b.textContent='Resend code'}
+},1000);
+
+render();
+})();
+</script>
