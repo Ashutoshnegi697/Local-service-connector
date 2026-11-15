@@ -1,111 +1,119 @@
-# Local Service Connector — DSA-Based Booking System
+# Yogya — Local Service Connector
 
-A terminal-based local service booking simulation built in **C++**. The project demonstrates how data structures can be used to manage users, service providers, search results and booking requests.
+**Connecting customers with trusted local service providers and bringing communities together through skill-sharing.**
+
+Yogya (Local Service Connector) is a web application project designed to make it easier for people to discover local service providers, request services, and connect with trainers in their community. It brings service discovery, booking requests, provider profiles, and community skill-sharing into one platform.
 
 **Team:** Decode  
-**Project GitHub:** https://github.com/Ashutoshnegi697/Local-service-connector  
-**Project status:** 100% complete — all four modules integrated.
+**Project type:** Local services and community skill-sharing platform
 
 ---
 
-## Project Abstract
+## About the Project
 
-People often find local workers such as electricians and plumbers through personal contacts, phone calls or messaging groups. Comparing providers by area, rating and past work can be difficult when this information is scattered.
+Finding a reliable electrician, plumber, carpenter, cleaner, or other local professional can be difficult when information is scattered across personal contacts and messaging groups. Yogya aims to make this process simpler by giving customers one place to explore service providers, compare available information, and send booking requests.
 
-Local Service Connector is a C++ console application that simulates local service booking for selected areas of Dehradun. A user signs in, searches for a service in an area, views providers sorted by rating and work count, books a provider and tracks the booking. Providers can accept or reject incoming requests.
+The platform also includes a skill-sharing section where people can discover trainers, publish skills they can teach, and request learning sessions.
 
-The main aim is to apply Data Structures to a practical booking problem.
+## Key Features
 
-## Project Approach and Architecture
+### 1. Local Service Connection
+- Browse different local service categories.
+- Explore service providers and their profile information.
+- View provider fees, ratings, and service areas.
+- Search and filter providers based on available service information.
+- Send booking requests to providers.
+- Track booking request status.
+- Providers can accept or reject incoming requests.
+- Confirm job completion through a customer job-code flow.
+- Submit ratings after a service is completed.
 
-The application uses a menu-driven console interface. It has three logical parts:
+### 2. Community Skill-Sharing
+- Discover trainers based on skills and categories.
+- Filter listings by learning level and teaching mode.
+- Publish a listing for a skill you can teach.
+- Send requests to learn a skill.
+- Trainers can accept or decline session requests.
 
-- **Menu layer:** accepts user input and displays options.
-- **Logic layer:** performs sign-in, provider search, booking and request operations.
-- **Data layer:** stores users, providers and bookings in linked lists, queues and stacks.
+### 3. User Experience
+- Separate customer and provider experiences.
+- Responsive interface for different screen sizes.
+- Light and dark themes.
+- Notification inbox and booking/session status feedback.
 
-All data remains in memory while the program runs. The application does not use a database, network connection, OTP system or graphical interface.
+## How It Works
 
-Provider search works in two passes: first it counts matching providers, then it creates a pointer array of exactly that size. The results are sorted by rating and work count.
+1. A user opens the platform and chooses the relevant customer, provider, or skill-sharing flow.
+2. Customers browse service categories and explore available providers.
+3. A customer sends a booking request to a selected provider.
+4. The provider reviews the request and accepts or rejects it.
+5. The customer can follow the request status and confirm completion through the job-code flow.
+6. Users can also explore trainer listings and request community learning sessions.
 
-A booking is added to the provider's circular queue (capacity 5). If that queue is full, the request is placed in a waiting queue. On completion, the booking is added to the user's and provider's history stacks.
+## Technology Used
 
-**Languages and tools:** C++, Git and GitHub.
+| Technology | Use |
+|---|---|
+| HTML5 | Page structure and content |
+| CSS3 | Styling, responsive layouts and themes |
+| JavaScript | Frontend interactions and application logic |
+| JSON | Frontend configuration and sample data |
+| C++ | Team module / data-structure implementation |
+| Browser localStorage | Stores prototype data locally in the browser |
+| Git & GitHub | Version control and team collaboration |
 
-## Data Structures Used
+## Project Structure
 
-| Project part | Data structure | Purpose |
+```text
+Local-service-connector/
+├── frontend/
+│   ├── index.html
+│   ├── styles.css
+│   ├── app.js
+│   └── config.json
+│
+└── backend/
+    ├── program-source/
+    ├── team-modules/
+    └── reference/
+```
+
+## Run the Project
+
+1. Clone or download this repository.
+2. Open the project folder in Visual Studio Code.
+3. Open `frontend/index.html` in your browser.
+
+For local development, you can use the **Live Server** extension in Visual Studio Code and open `frontend/index.html) with Live Server.
+
+## Current Prototype Notes
+
+- The frontend currently runs as a browser-side prototype.
+- Demo data is stored in the browser using localStorage.
+- Some notification and verification flows are simulated.
+- The current frontend is not yet connected to a deployed production backend or database.
+- Do not enter real passwords or payment details into a prototype.
+
+## Team Contributions
+
+This project was developed by Team Decode. Select a member's name to open their individual contribution file, which includes their GitHub ID and profile link.
+
+| Team member | Project role / contribution | GitHub |
 |---|---|---|
-| Users | Singly linked list | Supports sign-ups with quick front insertion |
-| Providers | Singly linked list | Stores providers and supports traversal during search |
-| Provider requests | Circular queue (size 5) | Reuses freed slots and serves requests in order |
-| Extra requests | Waiting queue (size 5) | Holds requests when the provider queue is full |
-| Cancelling from the middle | Temporary queue | Moves other requests while skipping the cancelled request |
-| User and provider history | Stacks (size 5) | Keeps the latest booking on top; a temporary stack removes the oldest |
-| Search results | Dynamic pointer array | Allocates the exact number of matches before sorting |
+| [Ashutosh Negi](team/members/member-4-ashutosh-negi.md) | Team Lead; project coordination and integration | [@Ashutoshnegi697](https://github.com/Ashutoshnegi697) |
+| [Devyansh Bhardwaj](team/members/member-3-devyansh-bhardwaj.md) | Booking and request-handling module | [@ayushbhardwaj123b](https://github.com/ayushbhardwaj123b) |
+| [Devyansh Bariswal](team/members/member-1-devyansh-bariswal.md) | User management module | [@vansh1928](https://github.com/vansh1928) |
+| [Rakshita Pant](team/members/member-2-rakshita-pant.md) | Provider profile and search module | [@Rakshita-wq](https://github.com/Rakshita-wq) |
 
-## Booking Flow
+## Future Scope
 
-1. **Sign in and choose:** The user signs in and selects a service and area from the menus.
-2. **Search:** A two-pass search builds the provider array, which is sorted by rating and work count.
-3. **Book:** The user selects a provider and a booking is created with status `Pending`.
-4. **Queue:** The booking enters the provider's circular queue, or the waiting queue if the circular queue is full.
-5. **Accept or reject:** The provider accepts or rejects the request. Its status is updated; after the work, it becomes `Completed`.
-6. **Finish:** The booking is pushed onto the user and provider history stacks, the provider's work count increases, and the user can submit a rating. The average is calculated as rating sum divided by rating count.
-
-## Memory Handling
-
-A booking is referenced by the user stack, provider queue and provider stack. Each booking has one owner and is deleted in only one place; queues and stacks store pointers to it. This ownership approach avoids dangling pointers and double deletion. A final memory clean-up check was completed after integration.
-
-## Module Mapping and Contributions
-
-Select a team member's name to open their individual contribution file. Each file includes their GitHub ID and profile link.
-
-| Module | Responsibility | Team member |
-|---|---|---|
-| Module 1 | User class, user linked list, sign-up, sign-in and password recovery | [Devyansh Bariswal](team/members/member-1-devyansh-bariswal.md) |
-| Module 2 | Provider class, provider linked list, service and area menus, and search | [Rakshita Pant](team/members/member-2-rakshita-pant.md) |
-| Module 3 | Booking queue, waiting queue and temporary queues | [Devyansh Bhardwaj](team/members/member-3-devyansh-bhardwaj.md) |
-| Module 4 | Main menu, Booking class, history stacks, status changes and rating | [Ashutosh Negi — Team Lead](team/members/member-4-ashutosh-negi.md) |
-
-All members collectively completed function interfaces between modules, weekly code merging, full integration, testing, memory clean-up checks and documentation.
-
-## Challenges and Roadblocks
-
-1. **Unique IDs with front insertion:** Separate counters for each list ensure IDs are not reused.
-2. **Circular queue full or empty:** A count variable distinguishes full and empty states when front and rear positions coincide.
-3. **Shared booking pointers:** Each booking has one owner and is deleted in one place, avoiding dangling pointers and double deletion.
-4. **Input problems:** Small validated input functions handle the interaction between `cin` and `getline`.
-5. **Password recovery without OTP:** The details supplied at sign-up are checked before a password reset is allowed.
-
-## Project Outcome
-
-The completed deliverable is a runnable C++ terminal application that provides:
-
-- Separate user and provider sign-up and sign-in, with password recovery.
-- Provider search by service and area, sorted by rating and work count.
-- Booking requests managed through circular and waiting queues (size 5).
-- Accept, reject and cancel request operations.
-- Recent booking history using stacks.
-- Provider work count and average rating calculation.
-- Source code and project documentation in this repository.
-
-## Testing and Validation
-
-| Test area | Status | Validation |
-|---|---|---|
-| Sign-up, sign-in and password recovery | Pass | Correct and incorrect credentials handled; IDs unique; menu inputs validated |
-| Provider search and sorting | Pass | Exact service and area matches; sorted by rating and work count |
-| Circular and waiting queues | Pass | Full and empty cases work; extra requests enter the waiting queue |
-| Cancellation | Pass | Middle request can be removed while preserving the order of others |
-| History stacks | Pass | Latest booking stays on top; oldest is removed when size 5 is exceeded |
-| Booking status and rating | Pass | Pending, accepted, completed and cancelled statuses work; rating uses sum / count |
-| Memory clean-up check | Pass | Each booking is deleted in one place; no dangling pointers |
-
-## Completion Status
-
-**100% complete.** All eight milestones are done, from shared classes through the final memory clean-up check. The waiting queue, history stacks, status changes, cancellation and rating were integrated and tested with the earlier modules.
+- Connect the frontend to a secure backend API.
+- Add a production database for users, providers, bookings, and trainer listings.
+- Implement secure server-side authentication and role-based access.
+- Add verified provider profiles and improved search filters.
+- Integrate reliable notification services.
+- Improve booking management and add further community features.
 
 ---
 
-*B.Tech CSE project — Team Decode.*
+*Yogya — making local services easier to discover, connect with, and book.*
