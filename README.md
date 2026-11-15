@@ -93,33 +93,14 @@ Do not use real passwords or payment details in the prototype.
 
 ## Contributors
 
-This project is developed by the following team members:
+This project is developed by the following team members. Select a member to open their individual contribution/profile file; each file includes their GitHub ID and profile link.
 
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/Ashutoshnegi697">
-        <img src="https://github.com/Ashutoshnegi697.png" width="100px" alt="Ashutosh Negi"/>
-        <br /><sub><b>Member 1 — Ashutosh Negi</b></sub>
-      </a>
-      <br />Group Lead
-    </td>
-    <td align="center">
-      <a href="https://github.com/ayushbhardwaj123b">
-        <img src="https://github.com/ayushbhardwaj123b.png" width="100px" alt="Ayush Bhardwaj"/>
-        <br /><sub><b>Member 2 — Ayush Bhardwaj</b></sub>
-      </a>
-      <br />Backend Development
-    </td>
-    <td align="center">
-      <a href="https://github.com/Rakshita-wq">
-        <img src="https://github.com/Rakshita-wq.png" width="100px" alt="Rakshita Pant"/>
-        <br /><sub><b>Member 3 — Rakshita Pant</b></sub>
-      </a>
-      <br />Provider Profile Module
-    </td>
-  </tr>
-</table>
+| Member | Contribution | GitHub |
+|---|---|---|
+| [Member 1 — Ashutosh Negi](team/members/member-1-ashutosh-negi.md) | Group Lead | [@Ashutoshnegi697](https://github.com/Ashutoshnegi697) |
+| [Member 2 — Ayush Bhardwaj](team/members/member-2-ayush-bhardwaj.md) | Backend Development | [@ayushbhardwaj123b](https://github.com/ayushbhardwaj123b) |
+| [Member 3 — Rakshita Pant](team/members/member-3-rakshita-pant.md) | Provider Profile Module | [@Rakshita-wq](https://github.com/Rakshita-wq) |
+| [Member 4 — Devyansh Bariswal](team/members/member-4-devyansh-bariswal.md) | Backend Code Contribution | [@vansh1928](https://github.com/vansh1928) |
 
 ## Future improvements
 
